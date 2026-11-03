@@ -3,9 +3,12 @@
  */
 #include "Locale.h"
 
+#include <stdio.h>
 #include <string.h>
 
 typedef struct HotSendGuiLocalePack {
+    const char *BrandTitle;
+    const char *WindowTitle;
     const char *Serial;
     const char *Tcp;
     const char *Device;
@@ -28,6 +31,8 @@ typedef struct HotSendGuiLocalePack {
 } HotSendGuiLocalePack;
 
 static const HotSendGuiLocalePack HotSendGuiLocaleEnglish = {
+    "HotSend",
+    "HotSend",
     "Serial",
     "TCP",
     "Device",
@@ -50,6 +55,8 @@ static const HotSendGuiLocalePack HotSendGuiLocaleEnglish = {
 };
 
 static const HotSendGuiLocalePack HotSendGuiLocaleChinese = {
+    "热传",
+    "热传",
     "串口",
     "TCP",
     "设备",
@@ -81,6 +88,16 @@ void HotSendGuiApplyLocale(HotSendGuiWidgets *Widgets, int Language) {
                                                  : &HotSendGuiLocaleEnglish;
     Widgets->Language = Language;
     Widgets->BrowseDialogTitle = Pack->BrowseTitle;
+    if (Widgets->BrandTitleLabel != NULL) {
+        char Markup[96];
+
+        snprintf(Markup, sizeof(Markup),
+                 "<span size='xx-large' weight='bold'>%s</span>", Pack->BrandTitle);
+        gtk_label_set_markup(Widgets->BrandTitleLabel, Markup);
+    }
+    if (Widgets->Window != NULL) {
+        gtk_window_set_title(Widgets->Window, Pack->WindowTitle);
+    }
     gtk_check_button_set_label(Widgets->SerialRadio, Pack->Serial);
     gtk_check_button_set_label(Widgets->TcpRadio, Pack->Tcp);
     if (Widgets->DeviceLabel != NULL) {

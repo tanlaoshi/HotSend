@@ -6,6 +6,7 @@
 typedef struct HotSendGuiWidgets {
     GtkApplication *Application;
     GtkWindow *Window;
+    GtkLabel *BrandTitleLabel;
     GtkCheckButton *EnglishRadio;
     GtkCheckButton *ChineseRadio;
     GtkCheckButton *SerialRadio;

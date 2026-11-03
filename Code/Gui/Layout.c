@@ -43,7 +43,6 @@ static GtkWidget *HotSendGuiBuildLabeledEntry(GtkLabel **OutLabel, const char *L
 GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     GtkWidget *Window;
     GtkWidget *Outer;
-    GtkWidget *Title;
     GtkWidget *LanguageRow;
     GtkWidget *TransportRow;
     GtkWidget *DeviceRow;
@@ -70,12 +69,12 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     gtk_window_set_child(Widgets->Window, Outer);
 
     LanguageRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
-    Title = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(Title),
+    Widgets->BrandTitleLabel = GTK_LABEL(gtk_label_new(NULL));
+    gtk_label_set_markup(Widgets->BrandTitleLabel,
                          "<span size='xx-large' weight='bold'>HotSend</span>");
-    gtk_widget_set_halign(Title, GTK_ALIGN_START);
-    gtk_widget_set_hexpand(Title, TRUE);
-    gtk_box_append(GTK_BOX(LanguageRow), Title);
+    gtk_widget_set_halign(GTK_WIDGET(Widgets->BrandTitleLabel), GTK_ALIGN_START);
+    gtk_widget_set_hexpand(GTK_WIDGET(Widgets->BrandTitleLabel), TRUE);
+    gtk_box_append(GTK_BOX(LanguageRow), GTK_WIDGET(Widgets->BrandTitleLabel));
     Widgets->EnglishRadio = GTK_CHECK_BUTTON(gtk_check_button_new_with_label("English"));
     Widgets->ChineseRadio = GTK_CHECK_BUTTON(gtk_check_button_new_with_label("中文"));
     gtk_check_button_set_group(Widgets->ChineseRadio, Widgets->EnglishRadio);

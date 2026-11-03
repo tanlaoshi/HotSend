@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# 安装图标 + 桌面/应用菜单入口，便于鼠标双击启动 HotSend Gui
+# 安装图标 + 桌面/应用菜单入口；Dock 靠 com.blocks.hotsend.desktop 对齐
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/Build/meson/Code/hotsend-gui"
 ICON_SRC="$ROOT/Assets/icons/hicolor"
-APP_ID="hotsend"
-DESKTOP_NAME="hotsend.desktop"
+ICON_FILE="$ROOT/Assets/icons/hicolor/128x128/apps/hotsend.png"
+# 与 gtk_application_new("com.blocks.hotsend") 同名，GNOME Dock 才能挂上图标
+DESKTOP_NAME="com.blocks.hotsend.desktop"
 
 if [[ ! -x "$BIN" ]]; then
   echo "missing binary: $BIN" >&2
@@ -14,32 +15,37 @@ if [[ ! -x "$BIN" ]]; then
   exit 1
 fi
 
-mkdir -p "$HOME/.local/share/icons/hicolor/48x48/apps" \
-  "$HOME/.local/share/icons/hicolor/128x128/apps" \
-  "$HOME/.local/share/icons/hicolor/256x256/apps" \
-  "$HOME/.local/share/applications"
+for size in 16 24 32 48 64 128 256; do
+  src="$ICON_SRC/${size}x${size}/apps/hotsend.png"
+  if [[ ! -f "$src" ]]; then
+    continue
+  fi
+  dest_dir="$HOME/.local/share/icons/hicolor/${size}x${size}/apps"
+  mkdir -p "$dest_dir"
+  cp -f "$src" "$dest_dir/hotsend.png"
+  cp -f "$src" "$dest_dir/com.blocks.hotsend.png"
+done
 
-cp -f "$ICON_SRC/48x48/apps/hotsend.png" "$HOME/.local/share/icons/hicolor/48x48/apps/${APP_ID}.png"
-cp -f "$ICON_SRC/128x128/apps/hotsend.png" "$HOME/.local/share/icons/hicolor/128x128/apps/${APP_ID}.png"
-cp -f "$ICON_SRC/256x256/apps/hotsend.png" "$HOME/.local/share/icons/hicolor/256x256/apps/${APP_ID}.png"
-cp -f "$ICON_SRC/128x128/apps/hotsend.png" \
-  "$HOME/.local/share/icons/hicolor/128x128/apps/com.blocks.hotsend.png"
+mkdir -p "$HOME/.local/share/applications"
+# 去掉旧名，避免 Dock 对不上
+rm -f "$HOME/.local/share/applications/hotsend.desktop"
 
 cat >"$HOME/.local/share/applications/${DESKTOP_NAME}" <<EOF
 [Desktop Entry]
 Type=Application
 Version=1.0
 Name=HotSend
-Name[zh_CN]=HotSend 热传
+Name[zh_CN]=热传
 Comment=Incremental board file transfer (TCP / serial)
 Comment[zh_CN]=板端差量热传（TCP / 串口）
 Exec=${BIN}
 Path=${ROOT}
-Icon=${APP_ID}
+Icon=${ICON_FILE}
 Terminal=false
 Categories=Development;System;
 StartupNotify=true
 StartupWMClass=com.blocks.hotsend
+X-GNOME-UsesNotifications=false
 EOF
 chmod 644 "$HOME/.local/share/applications/${DESKTOP_NAME}"
 
@@ -55,9 +61,9 @@ if [[ -z "$DESKTOP_DIR" || ! -d "$DESKTOP_DIR" ]]; then
   fi
 fi
 if [[ -n "${DESKTOP_DIR:-}" && -d "$DESKTOP_DIR" ]]; then
+  rm -f "$DESKTOP_DIR/hotsend.desktop"
   cp -f "$HOME/.local/share/applications/${DESKTOP_NAME}" "$DESKTOP_DIR/${DESKTOP_NAME}"
   chmod +x "$DESKTOP_DIR/${DESKTOP_NAME}"
-  # Ubuntu/GNOME：标为已信任，否则双击只提示「取消/启动」
   if command -v gio >/dev/null 2>&1; then
     gio set "$DESKTOP_DIR/${DESKTOP_NAME}" metadata::trusted true 2>/dev/null || true
   fi
@@ -72,4 +78,5 @@ if command -v update-desktop-database >/dev/null 2>&1; then
 fi
 
 echo "menu entry: $HOME/.local/share/applications/${DESKTOP_NAME}"
-echo "done. Open app menu → HotSend, or double-click Desktop/${DESKTOP_NAME}"
+echo "Dock tip: quit HotSend, launch from menu/桌面 (not raw binary); pin if needed."
+echo "done."

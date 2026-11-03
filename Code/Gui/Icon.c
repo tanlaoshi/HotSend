@@ -77,8 +77,9 @@ void HotSendGuiApplyWindowIcon(GtkWindow *Window) {
     if (Window == NULL) {
         return;
     }
-    gtk_window_set_icon_name(Window, "hotsend");
-    gtk_window_set_default_icon_name("hotsend");
+    /* 与 .desktop / gtk_application_new 应用 ID 对齐，便于 Dock 认图标 */
+    gtk_window_set_icon_name(Window, "com.blocks.hotsend");
+    gtk_window_set_default_icon_name("com.blocks.hotsend");
     if (HotSendGuiResolveIconsDirectory(IconsDirectory, sizeof(IconsDirectory)) != 0) {
         return;
     }
