@@ -42,7 +42,11 @@ int main(int ArgumentCount, char **ArgumentVector) {
         Arguments.Request.DataTimeoutSeconds = 180.0;
     }
 
-    ExitCode = HotSendTransferOverTcp(&Arguments.Request);
+    if (Arguments.Request.SerialDevicePath != NULL) {
+        ExitCode = HotSendTransferOverSerial(&Arguments.Request);
+    } else {
+        ExitCode = HotSendTransferOverTcp(&Arguments.Request);
+    }
     if (ExitCode == HotSendExitOk) {
         fprintf(stderr, "hotsend: OK\n");
     } else {

@@ -29,10 +29,11 @@ typedef struct HotSendGuiIdleDone {
 
 typedef struct HotSendGuiWorkerJob {
     HotSendGuiWidgets *Widgets;
-    char *Host;
+    char *HostOrDevice;
     char *FilePath;
     char *BoardPath;
-    int TcpPort;
+    int PortOrBaud;
+    int UseSerial;
     int NoReboot;
     int NoBackup;
 } HotSendGuiWorkerJob;
@@ -111,8 +112,6 @@ static gpointer HotSendGuiWorkerThreadMain(gpointer UserData) {
     int ExitCode;
 
     HotSendTransferRequestInit(&Request);
-    Request.Host = Job->Host;
-    Request.TcpPort = Job->TcpPort;
     Request.LocalFilePath = Job->FilePath;
     Request.BoardTargetPath = Job->BoardPath;
     Request.NoReboot = Job->NoReboot;
@@ -123,15 +122,22 @@ static gpointer HotSendGuiWorkerThreadMain(gpointer UserData) {
     Request.Progress = HotSendGuiWorkerProgress;
     Request.UserData = Job->Widgets;
     Request.CancelFlag = &Job->Widgets->CancelRequested;
-
-    ExitCode = HotSendTransferOverTcp(&Request);
+    if (Job->UseSerial) {
+        Request.SerialDevicePath = Job->HostOrDevice;
+        Request.BaudRate = Job->PortOrBaud > 0 ? Job->PortOrBaud : 115200;
+        ExitCode = HotSendTransferOverSerial(&Request);
+    } else {
+        Request.Host = Job->HostOrDevice;
+        Request.TcpPort = Job->PortOrBaud;
+        ExitCode = HotSendTransferOverTcp(&Request);
+    }
 
     Done = g_new0(HotSendGuiIdleDone, 1);
     Done->Widgets = Job->Widgets;
     Done->ExitCode = ExitCode;
     g_idle_add(HotSendGuiIdleFinish, Done);
 
-    g_free(Job->Host);
+    g_free(Job->HostOrDevice);
     g_free(Job->FilePath);
     g_free(Job->BoardPath);
     g_free(Job);
@@ -165,7 +171,7 @@ void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
     BoardPath = PathObject != NULL ? gtk_string_object_get_string(PathObject)
                                    : "BLOCKS:Kernel.elf";
     if (Host == NULL || Host[0] == 0 || FilePath == NULL || FilePath[0] == 0) {
-        HotSendGuiAppendLog(Widgets, "need host and file");
+        HotSendGuiAppendLog(Widgets, "need host/device and file");
         return;
     }
 
@@ -178,10 +184,16 @@ void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
 
     Job = g_new0(HotSendGuiWorkerJob, 1);
     Job->Widgets = Widgets;
-    Job->Host = g_strdup(Host);
+    Job->HostOrDevice = g_strdup(Host);
     Job->FilePath = g_strdup(FilePath);
     Job->BoardPath = g_strdup(BoardPath);
-    Job->TcpPort = PortText != NULL ? atoi(PortText) : (int)HotSendDefaultTcpPort;
+    Job->UseSerial = gtk_check_button_get_active(Widgets->UseSerialCheck) ? 1 : 0;
+    if (Job->UseSerial) {
+        Job->PortOrBaud = PortText != NULL && PortText[0] != 0 ? atoi(PortText) : 115200;
+    } else {
+        Job->PortOrBaud =
+            PortText != NULL ? atoi(PortText) : (int)HotSendDefaultTcpPort;
+    }
     Job->NoReboot = gtk_check_button_get_active(Widgets->NoRebootCheck) ? 1 : 0;
     Job->NoBackup = gtk_check_button_get_active(Widgets->NoBackupCheck) ? 1 : 0;
 

@@ -6,9 +6,12 @@ protocol_inc = include_directories('Protocol')
 protocol_sources = files(
   'Protocol/HotSendCrc32.c',
   'Protocol/HotSendTcpTransport.c',
+  'Protocol/HotSendSerialTransport.c',
+  'Protocol/HotSendSerialPrompt.c',
   'Protocol/HotSendSessionLines.c',
   'Protocol/HotSendBlockPlan.c',
   'Protocol/HotSendTransferSupport.c',
+  'Protocol/HotSendTransferSession.c',
   'Protocol/HotSendTransfer.c',
 )
 

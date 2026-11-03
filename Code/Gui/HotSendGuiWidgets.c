@@ -95,10 +95,12 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     gtk_widget_set_halign(Title, GTK_ALIGN_START);
     gtk_box_append(GTK_BOX(Outer), Title);
 
-    gtk_box_append(GTK_BOX(Outer), gtk_label_new("TCP (serial later)"));
+    Widgets->UseSerialCheck =
+        GTK_CHECK_BUTTON(gtk_check_button_new_with_label("Use serial (not TCP)"));
+    gtk_box_append(GTK_BOX(Outer), GTK_WIDGET(Widgets->UseSerialCheck));
 
     HostRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    gtk_box_append(GTK_BOX(HostRow), gtk_label_new("Host"));
+    gtk_box_append(GTK_BOX(HostRow), gtk_label_new("Host / Device"));
     Widgets->HostEntry = GTK_ENTRY(gtk_entry_new());
     gtk_editable_set_text(GTK_EDITABLE(Widgets->HostEntry), "192.168.31.47");
     gtk_widget_set_hexpand(GTK_WIDGET(Widgets->HostEntry), TRUE);
@@ -106,7 +108,7 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     gtk_box_append(GTK_BOX(Outer), HostRow);
 
     PortRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    gtk_box_append(GTK_BOX(PortRow), gtk_label_new("Port"));
+    gtk_box_append(GTK_BOX(PortRow), gtk_label_new("TCP port / Baud"));
     Widgets->PortEntry = GTK_ENTRY(gtk_entry_new());
     gtk_editable_set_text(GTK_EDITABLE(Widgets->PortEntry), "26992");
     gtk_box_append(GTK_BOX(PortRow), GTK_WIDGET(Widgets->PortEntry));

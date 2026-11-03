@@ -9,13 +9,14 @@
 
 void HotSendCliPrintUsage(const char *ProgramName) {
     fprintf(stderr,
-            "usage: %s --host <ipv4> --file <path> [options]\n"
+            "usage: %s (--host <ipv4> | --port <device>) --file <path> [options]\n"
             "\n"
-            "TCP hot-transfer (board: ksend serve). Options:\n"
-            "  --host <ipv4>       board address (required)\n"
+            "  --host <ipv4>       TCP (board: ksend serve)\n"
+            "  --port <device>      serial e.g. /dev/ttyUSB0 (exclusive with --host)\n"
+            "  --baud <n>          serial baud (default 115200)\n"
             "  --file|--elf <path> local file (required)\n"
             "  --path <board>      board target (default BLOCKS:Kernel.elf)\n"
-            "  --tcp-port <n>      default 26992\n"
+            "  --tcp-port <n>      TCP port (default 26992)\n"
             "  --no-reboot         leave board shell after OK\n"
             "  --no-backup         skip board .bak\n"
             "  --ready-timeout <s> --ack-timeout <s>\n"
@@ -84,6 +85,18 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
                 Arguments->ParseError = 1;
                 return -1;
             }
+        } else if (strcmp(Token, "--port") == 0) {
+            if (HotSendCliTakeString(&Index, ArgumentCount, ArgumentVector,
+                                     &Arguments->Request.SerialDevicePath) != 0) {
+                Arguments->ParseError = 1;
+                return -1;
+            }
+        } else if (strcmp(Token, "--baud") == 0) {
+            if (HotSendCliTakeInt(&Index, ArgumentCount, ArgumentVector,
+                                  &Arguments->Request.BaudRate) != 0) {
+                Arguments->ParseError = 1;
+                return -1;
+            }
         } else if (strcmp(Token, "--file") == 0 || strcmp(Token, "--elf") == 0) {
             if (HotSendCliTakeString(&Index, ArgumentCount, ArgumentVector,
                                      &Arguments->Request.LocalFilePath) != 0) {
@@ -136,7 +149,13 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
             return -1;
         }
     }
-    if (Arguments->Request.Host == NULL || Arguments->Request.LocalFilePath == NULL) {
+    if (Arguments->Request.LocalFilePath == NULL) {
+        Arguments->ParseError = 1;
+        return -1;
+    }
+    if ((Arguments->Request.Host == NULL) ==
+        (Arguments->Request.SerialDevicePath == NULL)) {
+        /* 必须恰好一个：Host 或 Serial */
         Arguments->ParseError = 1;
         return -1;
     }

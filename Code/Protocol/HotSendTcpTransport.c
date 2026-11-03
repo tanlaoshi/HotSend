@@ -167,6 +167,8 @@ static int HotSendTcpReadLine(HotSendTransport *Self, char *Line, size_t Capacit
             memmove(State->Buffer, State->Buffer + 1, State->BufferLength - 1);
             State->BufferLength--;
             if (Byte == (unsigned char)'\r') {
+                /* 须再从下标 0 读：memmove 后 \\n 已到队首，禁 Index++ 跳过 */
+                Index = (size_t)-1;
                 continue;
             }
             if (Byte == (unsigned char)'\n') {

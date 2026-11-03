@@ -11,6 +11,6 @@ project(
   ],
 )
 
-add_project_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
+add_project_arguments('-D_DEFAULT_SOURCE', language: 'c')
 
 subdir('Code')

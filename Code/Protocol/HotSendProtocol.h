@@ -1,5 +1,5 @@
 /*
- * HotSendProtocol.h — 公开 API（TCP 差量热传）
+ * HotSendProtocol.h — 公开 API（TCP / 串口差量热传）
  */
 #ifndef HOT_SEND_PROTOCOL_H
 #define HOT_SEND_PROTOCOL_H
@@ -17,6 +17,8 @@ typedef struct HotSendTransferRequest {
     const char *Host;
     int TcpPort; /* 0 → 26992 */
     int MaximumSegmentSize; /* 0 → 1200；<0 不设 TCP_MAXSEG */
+    const char *SerialDevicePath; /* 非 NULL 则走串口（与 Host 互斥） */
+    int BaudRate; /* 0 → 115200 */
     const char *LocalFilePath;
     const char *BoardTargetPath; /* NULL → BLOCKS:Kernel.elf */
     int NoReboot;
@@ -28,13 +30,12 @@ typedef struct HotSendTransferRequest {
     HotSendLogFunction Log;
     HotSendProgressFunction Progress;
     void *UserData;
-    /* 非 NULL 且 *CancelFlag != 0 时：发 abort 帧并结束（Gui 中止） */
     volatile int *CancelFlag;
 } HotSendTransferRequest;
 
 void HotSendTransferRequestInit(HotSendTransferRequest *Request);
 
-/* 返回 HotSendExitCode */
 int HotSendTransferOverTcp(const HotSendTransferRequest *Request);
+int HotSendTransferOverSerial(const HotSendTransferRequest *Request);
 
 #endif
