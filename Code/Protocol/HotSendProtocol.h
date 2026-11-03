@@ -28,6 +28,8 @@ typedef struct HotSendTransferRequest {
     HotSendLogFunction Log;
     HotSendProgressFunction Progress;
     void *UserData;
+    /* 非 NULL 且 *CancelFlag != 0 时：发 abort 帧并结束（Gui 中止） */
+    volatile int *CancelFlag;
 } HotSendTransferRequest;
 
 void HotSendTransferRequestInit(HotSendTransferRequest *Request);

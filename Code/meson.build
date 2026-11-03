@@ -42,3 +42,17 @@ executable(
   dependencies: hotsend_protocol_dep,
   install: false,
 )
+
+gtk4_dep = dependency('gtk4')
+
+executable(
+  'hotsend-gui',
+  files(
+    'Gui/HotSendGuiMain.c',
+    'Gui/HotSendGuiWidgets.c',
+    'Gui/HotSendGuiWorker.c',
+  ),
+  include_directories: [protocol_inc, include_directories('Gui')],
+  dependencies: [hotsend_protocol_dep, gtk4_dep],
+  install: false,
+)

@@ -5,7 +5,7 @@ Ubuntu 原生主机侧热传工具：把本地文件差量写入 Blocks 板端 F
 - **产品名**：HotSend  
 - **本仓路径**：`~/HotSend`（独立 Git 库，**不**在 Blocks 树内）  
 - **文档**：[`Docs/`](Docs/)  
-- **源码**：[`Code/`](Code/)（Protocol ✅；Cli ✅；Gui = 活 ★）  
+- **源码**：[`Code/`](Code/)（Protocol / Cli / Gui ✅；串口 = 活 ★）  
 - **产物**：[`Build/`](Build/)（不入库二进制）  
 - **协议对表**（姊妹仓 Blocks）：板端 `Kernel/HAL/Common/Ksend/`；现网对照 `Tools/ksend.py`（HotSend 绿之前保留）
 

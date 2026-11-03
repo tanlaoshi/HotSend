@@ -166,6 +166,12 @@ int HotSendTransferOverTcp(const HotSendTransferRequest *Request) {
         uint32_t SentBytes = 0;
         uint32_t Scan;
 
+        if (Request->CancelFlag != NULL && *Request->CancelFlag != 0) {
+            HotSendTransferLog(Request, "cancel: aborting transfer");
+            (void)HotSendSendAbortFrame(&Transport);
+            ExitCode = HotSendExitProtocol;
+            goto Done;
+        }
         if (Length > HotSendBlockBytes) {
             Length = HotSendBlockBytes;
         }
