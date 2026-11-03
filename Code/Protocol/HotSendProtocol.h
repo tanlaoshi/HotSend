@@ -19,10 +19,14 @@ typedef struct HotSendTransferRequest {
     int MaximumSegmentSize; /* 0 → 1200；<0 不设 TCP_MAXSEG */
     const char *SerialDevicePath; /* 非 NULL 则走串口（与 Host 互斥） */
     int BaudRate; /* 0 → 115200 */
-    const char *LocalFilePath;
+    const char *LocalFilePath; /* InfoOnly 时可 NULL（只查板） */
     const char *BoardTargetPath; /* NULL → BLOCKS:Kernel.elf */
     int NoReboot;
     int NoBackup;
+    int InfoOnly; /* 发 ksend info；与 DryRun 互斥 */
+    int DryRun; /* 握手+差量表后 abort，不写盘 */
+    int PaceMilliseconds; /* 每块 ACK 后睡 N ms；0=关 */
+    int SteadyThrottle; /* 每 16 块额外稳妥节流（默认关） */
     double ReadyTimeoutSeconds;
     double AckTimeoutSeconds;
     double DataTimeoutSeconds;

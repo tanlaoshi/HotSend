@@ -13,6 +13,8 @@ typedef struct HotSendGuiWidgets {
     GtkCheckButton *UseSerialCheck;
     GtkCheckButton *NoRebootCheck;
     GtkCheckButton *NoBackupCheck;
+    GtkCheckButton *DryRunCheck;
+    GtkCheckButton *SteadyThrottleCheck;
     GtkButton *StartButton;
     GtkButton *AbortButton;
     GtkProgressBar *ProgressBar;

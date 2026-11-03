@@ -12,6 +12,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+static void HotSendSessionSleepSeconds(double Seconds) {
+    struct timespec Request;
+
+    if (Seconds <= 0.0) {
+        return;
+    }
+    Request.tv_sec = (time_t)Seconds;
+    Request.tv_nsec = (long)((Seconds - (double)Request.tv_sec) * 1e9);
+    if (Request.tv_nsec < 0) {
+        Request.tv_nsec = 0;
+    }
+    (void)nanosleep(&Request, NULL);
+}
 
 static void HotSendSessionLog(const HotSendTransferRequest *Request,
                               const char *Message) {
@@ -135,6 +150,27 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
              (unsigned)LocalCount);
     HotSendSessionLog(Request, Note);
 
+    if (Request->DryRun) {
+        static const char *const AbortPrefixes[] = {"KSEND ABORT", "KSEND FAIL"};
+
+        HotSendSessionLog(Request, "dry-run: nothing written; aborting board transfer");
+        if (HotSendSendAbortFrame(Transport) != 0) {
+            ExitCode = HotSendExitProtocol;
+            goto Done;
+        }
+        Line[0] = 0;
+        if (HotSendWaitForLinePrefix(Transport, AbortPrefixes, 2, Line, sizeof(Line),
+                                     Request->AckTimeoutSeconds, Request->Log,
+                                     Request->UserData) == 0) {
+            HotSendSessionLog(Request, Line);
+        } else {
+            HotSendSessionLog(Request,
+                              "board did not confirm abort (it will time out alone)");
+        }
+        ExitCode = HotSendExitOk;
+        goto Done;
+    }
+
     for (Position = 0; Position < PlanCount; Position++) {
         uint32_t BlockIndex = Plan[Position];
         size_t Offset = (size_t)BlockIndex * HotSendBlockBytes;
@@ -198,6 +234,15 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
                  PlanCount ? (100u * (Position + 1)) / PlanCount : 100u,
                  (unsigned)(SentBytes / 1024u));
         HotSendSessionLog(Request, Note);
+        if (Request->PaceMilliseconds > 0) {
+            HotSendSessionSleepSeconds((double)Request->PaceMilliseconds / 1000.0);
+        }
+        if (Request->SteadyThrottle && ((Position + 1) % 16u) == 0u) {
+            double PaceSeconds = (double)Request->PaceMilliseconds / 1000.0;
+            double Gap = PaceSeconds > 0.5 ? PaceSeconds : 0.5;
+
+            HotSendSessionSleepSeconds(Gap * 4.0);
+        }
     }
 
     {

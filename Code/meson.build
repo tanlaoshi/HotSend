@@ -12,6 +12,7 @@ protocol_sources = files(
   'Protocol/HotSendBlockPlan.c',
   'Protocol/HotSendTransferSupport.c',
   'Protocol/HotSendTransferSession.c',
+  'Protocol/HotSendInfoSession.c',
   'Protocol/HotSendTransfer.c',
 )
 

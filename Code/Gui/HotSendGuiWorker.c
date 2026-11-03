@@ -36,6 +36,8 @@ typedef struct HotSendGuiWorkerJob {
     int UseSerial;
     int NoReboot;
     int NoBackup;
+    int DryRun;
+    int SteadyThrottle;
 } HotSendGuiWorkerJob;
 
 static gboolean HotSendGuiIdleAppendLog(gpointer UserData) {
@@ -116,6 +118,8 @@ static gpointer HotSendGuiWorkerThreadMain(gpointer UserData) {
     Request.BoardTargetPath = Job->BoardPath;
     Request.NoReboot = Job->NoReboot;
     Request.NoBackup = Job->NoBackup;
+    Request.DryRun = Job->DryRun;
+    Request.SteadyThrottle = Job->SteadyThrottle;
     Request.AckTimeoutSeconds = 120.0;
     Request.DataTimeoutSeconds = 180.0;
     Request.Log = HotSendGuiWorkerLog;
@@ -196,6 +200,9 @@ void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
     }
     Job->NoReboot = gtk_check_button_get_active(Widgets->NoRebootCheck) ? 1 : 0;
     Job->NoBackup = gtk_check_button_get_active(Widgets->NoBackupCheck) ? 1 : 0;
+    Job->DryRun = gtk_check_button_get_active(Widgets->DryRunCheck) ? 1 : 0;
+    Job->SteadyThrottle =
+        gtk_check_button_get_active(Widgets->SteadyThrottleCheck) ? 1 : 0;
 
     Widgets->WorkerThread =
         g_thread_new("hotsend-transfer", HotSendGuiWorkerThreadMain, Job);

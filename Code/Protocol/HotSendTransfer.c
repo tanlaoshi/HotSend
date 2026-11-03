@@ -1,8 +1,9 @@
 /*
- * HotSendTransfer.c — TCP / 串口入口（会话见 HotSendTransferSession.c）
+ * HotSendTransfer.c — TCP / 串口入口（会话见 HotSendTransferSession / InfoSession）
  */
 #include "HotSendProtocol.h"
 
+#include "HotSendInfoSession.h"
 #include "HotSendSerialTransport.h"
 #include "HotSendTcpTransport.h"
 #include "HotSendTransferSession.h"
@@ -32,6 +33,15 @@ void HotSendTransferRequestInit(HotSendTransferRequest *Request) {
     Request->VerifyTimeoutSeconds = 300.0;
 }
 
+static int HotSendTransferRunOpened(const HotSendTransferRequest *Request,
+                                    HotSendTransport *Transport,
+                                    int SerialCommandPath) {
+    if (Request->InfoOnly) {
+        return HotSendInfoSession(Request, Transport, SerialCommandPath);
+    }
+    return HotSendTransferSession(Request, Transport, SerialCommandPath);
+}
+
 int HotSendTransferOverTcp(const HotSendTransferRequest *Request) {
     HotSendTransport Transport;
     char Note[96];
@@ -40,7 +50,10 @@ int HotSendTransferOverTcp(const HotSendTransferRequest *Request) {
     int ExitCode;
     int Opened = 0;
 
-    if (Request == NULL || Request->Host == NULL || Request->LocalFilePath == NULL) {
+    if (Request == NULL || Request->Host == NULL) {
+        return HotSendExitLocal;
+    }
+    if (!Request->InfoOnly && Request->LocalFilePath == NULL) {
         return HotSendExitLocal;
     }
     TcpPort = Request->TcpPort > 0 ? Request->TcpPort : (int)HotSendDefaultTcpPort;
@@ -55,7 +68,7 @@ int HotSendTransferOverTcp(const HotSendTransferRequest *Request) {
         return HotSendExitProtocol;
     }
     Opened = 1;
-    ExitCode = HotSendTransferSession(Request, &Transport, 0);
+    ExitCode = HotSendTransferRunOpened(Request, &Transport, 0);
     if (Opened) {
         Transport.Close(&Transport);
     }
@@ -69,8 +82,10 @@ int HotSendTransferOverSerial(const HotSendTransferRequest *Request) {
     int ExitCode;
     int Opened = 0;
 
-    if (Request == NULL || Request->SerialDevicePath == NULL ||
-        Request->LocalFilePath == NULL) {
+    if (Request == NULL || Request->SerialDevicePath == NULL) {
+        return HotSendExitLocal;
+    }
+    if (!Request->InfoOnly && Request->LocalFilePath == NULL) {
         return HotSendExitLocal;
     }
     BaudRate = Request->BaudRate > 0 ? Request->BaudRate : 115200;
@@ -82,7 +97,7 @@ int HotSendTransferOverSerial(const HotSendTransferRequest *Request) {
         return HotSendExitProtocol;
     }
     Opened = 1;
-    ExitCode = HotSendTransferSession(Request, &Transport, 1);
+    ExitCode = HotSendTransferRunOpened(Request, &Transport, 1);
     if (Opened) {
         Transport.Close(&Transport);
     }

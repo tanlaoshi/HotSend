@@ -9,14 +9,18 @@
 
 void HotSendCliPrintUsage(const char *ProgramName) {
     fprintf(stderr,
-            "usage: %s (--host <ipv4> | --port <device>) --file <path> [options]\n"
+            "usage: %s (--host <ipv4> | --port <device>) [options]\n"
             "\n"
             "  --host <ipv4>       TCP (board: ksend serve)\n"
             "  --port <device>      serial e.g. /dev/ttyUSB0 (exclusive with --host)\n"
             "  --baud <n>          serial baud (default 115200)\n"
-            "  --file|--elf <path> local file (required)\n"
+            "  --file|--elf <path> local file (required except --info alone)\n"
             "  --path <board>      board target (default BLOCKS:Kernel.elf)\n"
             "  --tcp-port <n>      TCP port (default 26992)\n"
+            "  --info              query board size/CRC (optional --file compare)\n"
+            "  --dry-run           handshake + diff, then abort (no write)\n"
+            "  --pace-ms <n>       sleep N ms after each block ACK (default 0)\n"
+            "  --steady-throttle   every 16 blocks extra sleep (Wi-Fi/USB xHCI)\n"
             "  --no-reboot         leave board shell after OK\n"
             "  --no-backup         skip board .bak\n"
             "  --ready-timeout <s> --ack-timeout <s>\n"
@@ -115,6 +119,18 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
                 Arguments->ParseError = 1;
                 return -1;
             }
+        } else if (strcmp(Token, "--info") == 0) {
+            Arguments->Request.InfoOnly = 1;
+        } else if (strcmp(Token, "--dry-run") == 0) {
+            Arguments->Request.DryRun = 1;
+        } else if (strcmp(Token, "--pace-ms") == 0) {
+            if (HotSendCliTakeInt(&Index, ArgumentCount, ArgumentVector,
+                                  &Arguments->Request.PaceMilliseconds) != 0) {
+                Arguments->ParseError = 1;
+                return -1;
+            }
+        } else if (strcmp(Token, "--steady-throttle") == 0) {
+            Arguments->Request.SteadyThrottle = 1;
         } else if (strcmp(Token, "--no-reboot") == 0) {
             Arguments->Request.NoReboot = 1;
         } else if (strcmp(Token, "--no-backup") == 0) {
@@ -149,13 +165,23 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
             return -1;
         }
     }
-    if (Arguments->Request.LocalFilePath == NULL) {
+    if (Arguments->Request.InfoOnly && Arguments->Request.DryRun) {
+        fprintf(stderr, "--info and --dry-run are mutually exclusive\n");
+        Arguments->ParseError = 1;
+        return -1;
+    }
+    if (Arguments->Request.InfoOnly &&
+        (Arguments->Request.NoReboot || Arguments->Request.NoBackup)) {
+        fprintf(stderr, "--no-reboot / --no-backup only apply to a transfer\n");
+        Arguments->ParseError = 1;
+        return -1;
+    }
+    if (!Arguments->Request.InfoOnly && Arguments->Request.LocalFilePath == NULL) {
         Arguments->ParseError = 1;
         return -1;
     }
     if ((Arguments->Request.Host == NULL) ==
         (Arguments->Request.SerialDevicePath == NULL)) {
-        /* 必须恰好一个：Host 或 Serial */
         Arguments->ParseError = 1;
         return -1;
     }
