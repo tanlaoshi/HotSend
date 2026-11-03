@@ -234,14 +234,23 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
                  PlanCount ? (100u * (Position + 1)) / PlanCount : 100u,
                  (unsigned)(SentBytes / 1024u));
         HotSendSessionLog(Request, Note);
-        if (Request->PaceMilliseconds > 0) {
-            HotSendSessionSleepSeconds((double)Request->PaceMilliseconds / 1000.0);
-        }
-        if (Request->SteadyThrottle && ((Position + 1) % 16u) == 0u) {
-            double PaceSeconds = (double)Request->PaceMilliseconds / 1000.0;
-            double Gap = PaceSeconds > 0.5 ? PaceSeconds : 0.5;
+        /* 对表 ksend.py：仅 PaceMilliseconds>0 才歇（有线默认不睡） */
+        {
+            int PaceMilliseconds = Request->PaceMilliseconds;
 
-            HotSendSessionSleepSeconds(Gap * 4.0);
+            if (PaceMilliseconds <= 0 && Request->SteadyThrottle) {
+                PaceMilliseconds = 500; /* Gui/CLI 稳妥节流 → 等同 --pace-ms 500 */
+            }
+            if (PaceMilliseconds > 0) {
+                double PaceSeconds = (double)PaceMilliseconds / 1000.0;
+
+                HotSendSessionSleepSeconds(PaceSeconds);
+                if (((Position + 1) % 16u) == 0u) {
+                    double Gap = PaceSeconds > 0.5 ? PaceSeconds : 0.5;
+
+                    HotSendSessionSleepSeconds(Gap * 4.0);
+                }
+            }
         }
     }
 

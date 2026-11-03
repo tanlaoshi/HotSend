@@ -25,8 +25,8 @@ typedef struct HotSendTransferRequest {
     int NoBackup;
     int InfoOnly; /* 发 ksend info；与 DryRun 互斥 */
     int DryRun; /* 握手+差量表后 abort，不写盘 */
-    int PaceMilliseconds; /* 每块 ACK 后睡 N ms；0=关 */
-    int SteadyThrottle; /* 每 16 块额外稳妥节流（默认关） */
+    int PaceMilliseconds; /* >0：每块 ACK 后睡 N ms，且每 16 块再加长歇（对表 ksend.py） */
+    int SteadyThrottle; /* 默认关；若 pace=0 则当作 pace-ms=500（Wi‑Fi/xHCI 应急） */
     double ReadyTimeoutSeconds;
     double AckTimeoutSeconds;
     double DataTimeoutSeconds;

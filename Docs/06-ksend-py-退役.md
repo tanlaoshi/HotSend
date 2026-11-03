@@ -11,7 +11,7 @@ HotSend **协议同形**，目标是日常主机侧逐步取代 Blocks 仓内 `T
 | 2 | 串口备份路径绿 | `hotsend --port /dev/ttyUSB0 …` → `KSEND OK`（壳 `Blocks>`，非 occupy） |
 | 3 | `--info` | 板回 `KSEND INFO`；带 `--file` 时可判 match / diff |
 | 4 | `--dry-run` | READY+CRC 表+差量表后 abort；板上文件未改 |
-| 5 | 节流可选 | `--pace-ms` / `--steady-throttle` 默认关；Wi‑Fi+USB 同 xHCI 时可开 |
+| 5 | 节流可选 | 默认不睡；`--pace-ms > 0`（及每 16 块加长歇）对表 py；`--steady-throttle`≡pace 500 |
 | 6 | 文档指向 | Blocks 侧手测/脚本说明改为推荐 `~/HotSend`（本条由 Blocks 仓另改） |
 
 ## 仍保留 py 的理由（未退役前）
