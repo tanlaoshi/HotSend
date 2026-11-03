@@ -3,7 +3,58 @@
  */
 #include "Widgets.h"
 
+#include "Config.h"
 #include "Worker.h"
+
+#include <stdio.h>
+#include <string.h>
+
+static void HotSendGuiApplyConfig(HotSendGuiWidgets *Widgets) {
+    HotSendConfig Config;
+    char PortText[32];
+    int UseSerial;
+
+    if (Widgets == NULL || HotSendConfigLoad(&Config, NULL) != 0) {
+        return;
+    }
+    UseSerial = Config.PreferSerial;
+    if (UseSerial < 0) {
+        UseSerial = Config.HaveSerial ? 1 : 0;
+    }
+    gtk_check_button_set_active(Widgets->UseSerialCheck, UseSerial ? TRUE : FALSE);
+    if (UseSerial && Config.HaveSerial) {
+        gtk_editable_set_text(GTK_EDITABLE(Widgets->HostEntry), Config.SerialDevicePath);
+        snprintf(PortText, sizeof(PortText), "%d",
+                 Config.BaudRate > 0 ? Config.BaudRate : 115200);
+        gtk_editable_set_text(GTK_EDITABLE(Widgets->PortEntry), PortText);
+    } else if (Config.HaveHost) {
+        gtk_editable_set_text(GTK_EDITABLE(Widgets->HostEntry), Config.Host);
+        snprintf(PortText, sizeof(PortText), "%d",
+                 Config.TcpPort > 0 ? Config.TcpPort : (int)HotSendDefaultTcpPort);
+        gtk_editable_set_text(GTK_EDITABLE(Widgets->PortEntry), PortText);
+    }
+    if (Config.HaveFile) {
+        gtk_editable_set_text(GTK_EDITABLE(Widgets->FileEntry), Config.LocalFilePath);
+    }
+    if (Config.HavePath) {
+        if (strcmp(Config.BoardTargetPath, "D:Kernel.elf") == 0) {
+            gtk_drop_down_set_selected(Widgets->BoardPathDropDown, 1);
+        } else {
+            gtk_drop_down_set_selected(Widgets->BoardPathDropDown, 0);
+        }
+    }
+    gtk_check_button_set_active(Widgets->NoRebootCheck, Config.NoReboot ? TRUE : FALSE);
+    gtk_check_button_set_active(Widgets->NoBackupCheck, Config.NoBackup ? TRUE : FALSE);
+    gtk_check_button_set_active(Widgets->DryRunCheck, Config.DryRun ? TRUE : FALSE);
+    gtk_check_button_set_active(Widgets->SteadyThrottleCheck,
+                                Config.SteadyThrottle ? TRUE : FALSE);
+    {
+        char Note[576];
+
+        snprintf(Note, sizeof(Note), "config: %s", Config.LoadedFrom);
+        HotSendGuiAppendLog(Widgets, Note);
+    }
+}
 
 void HotSendGuiAppendLog(HotSendGuiWidgets *Widgets, const char *Line) {
     GtkTextIter End;
@@ -182,5 +233,6 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     gtk_widget_set_vexpand(LogFrame, TRUE);
     gtk_box_append(GTK_BOX(Outer), LogFrame);
 
+    HotSendGuiApplyConfig(Widgets);
     return Window;
 }

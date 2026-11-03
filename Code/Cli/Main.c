@@ -33,6 +33,9 @@ int main(int ArgumentCount, char **ArgumentVector) {
         return HotSendExitOk;
     }
 
+    if (Arguments.ConfigLoaded) {
+        fprintf(stderr, "config: %s\n", Arguments.Config.LoadedFrom);
+    }
     Arguments.Request.Log = HotSendCliLog;
     Arguments.Request.Progress = HotSendCliProgress;
     if (Arguments.Request.AckTimeoutSeconds < 120.0) {

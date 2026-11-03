@@ -1,5 +1,5 @@
 /*
- * Arguments.c — 命令行参数（对表 Tools/ksend.py 常用项）
+ * Arguments.c — 命令行参数；缺省项来自 hotsend.conf
  */
 #include "Arguments.h"
 
@@ -9,23 +9,32 @@
 
 void HotSendCliPrintUsage(const char *ProgramName) {
     fprintf(stderr,
-            "usage: %s (--host <ipv4> | --port <device>) [options]\n"
+            "usage: %s [options]\n"
             "\n"
+            "Defaults from config (first found):\n"
+            "  $HOTSEND_CONFIG, ./hotsend.conf,\n"
+            "  ~/.config/hotsend/hotsend.conf, ~/HotSend/hotsend.conf\n"
+            "CLI flags override config. Bare '%s' uses config only.\n"
+            "\n"
+            "  --config <path>     config file\n"
             "  --host <ipv4>       TCP (board: ksend serve)\n"
-            "  --port <device>      serial e.g. /dev/ttyUSB0 (exclusive with --host)\n"
+            "  --port <device>      serial e.g. /dev/ttyUSB0\n"
             "  --baud <n>          serial baud (default 115200)\n"
-            "  --file|--elf <path> local file (required except --info alone)\n"
+            "  --file|--elf <path> local file (required except --info)\n"
             "  --path <board>      board target (default BLOCKS:Kernel.elf)\n"
             "  --tcp-port <n>      TCP port (default 26992)\n"
-            "  --info              query board size/CRC (optional --file compare)\n"
-            "  --dry-run           handshake + diff, then abort (no write)\n"
-            "  --pace-ms <n>       sleep N ms after each block ACK (default 0)\n"
-            "  --steady-throttle   every 16 blocks extra sleep (Wi-Fi/USB xHCI)\n"
+            "  --info              query board size/CRC\n"
+            "  --dry-run           handshake + diff, then abort\n"
+            "  --pace-ms <n>       sleep N ms after each block ACK\n"
+            "  --steady-throttle   every 16 blocks extra sleep\n"
             "  --no-reboot         leave board shell after OK\n"
             "  --no-backup         skip board .bak\n"
             "  --ready-timeout <s> --ack-timeout <s>\n"
             "  --data-timeout <s>  --verify-timeout <s>\n"
-            "  --help\n",
+            "  --help\n"
+            "\n"
+            "GUI:  Build/meson/Code/hotsend-gui\n",
+            ProgramName != NULL ? ProgramName : "hotsend",
             ProgramName != NULL ? ProgramName : "hotsend");
 }
 
@@ -35,6 +44,7 @@ void HotSendCliArgumentsClear(HotSendCliArguments *Arguments) {
     }
     memset(Arguments, 0, sizeof(*Arguments));
     HotSendTransferRequestInit(&Arguments->Request);
+    HotSendConfigClear(&Arguments->Config);
 }
 
 static int HotSendCliTakeString(int *Index, int ArgumentCount, char **ArgumentVector,
@@ -71,17 +81,36 @@ static int HotSendCliTakeInt(int *Index, int ArgumentCount, char **ArgumentVecto
 int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
                              char **ArgumentVector) {
     int Index;
+    const char *ConfigPath = NULL;
 
     if (Arguments == NULL) {
         return -1;
     }
     HotSendCliArgumentsClear(Arguments);
     for (Index = 1; Index < ArgumentCount; Index++) {
-        const char *Token = ArgumentVector[Index];
-
-        if (strcmp(Token, "--help") == 0 || strcmp(Token, "-h") == 0) {
+        if (strcmp(ArgumentVector[Index], "--help") == 0 ||
+            strcmp(ArgumentVector[Index], "-h") == 0) {
             Arguments->ShowHelp = 1;
             return 0;
+        }
+        if (strcmp(ArgumentVector[Index], "--config") == 0) {
+            if (HotSendCliTakeString(&Index, ArgumentCount, ArgumentVector, &ConfigPath) !=
+                0) {
+                Arguments->ParseError = 1;
+                return -1;
+            }
+        }
+    }
+    if (HotSendConfigLoad(&Arguments->Config, ConfigPath) == 0) {
+        Arguments->ConfigLoaded = 1;
+        HotSendConfigApplyToRequest(&Arguments->Config, &Arguments->Request);
+    }
+    for (Index = 1; Index < ArgumentCount; Index++) {
+        const char *Token = ArgumentVector[Index];
+
+        if (strcmp(Token, "--config") == 0) {
+            Index++;
+            continue;
         }
         if (strcmp(Token, "--host") == 0) {
             if (HotSendCliTakeString(&Index, ArgumentCount, ArgumentVector,
@@ -89,12 +118,14 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
                 Arguments->ParseError = 1;
                 return -1;
             }
+            Arguments->Request.SerialDevicePath = NULL;
         } else if (strcmp(Token, "--port") == 0) {
             if (HotSendCliTakeString(&Index, ArgumentCount, ArgumentVector,
                                      &Arguments->Request.SerialDevicePath) != 0) {
                 Arguments->ParseError = 1;
                 return -1;
             }
+            Arguments->Request.Host = NULL;
         } else if (strcmp(Token, "--baud") == 0) {
             if (HotSendCliTakeInt(&Index, ArgumentCount, ArgumentVector,
                                   &Arguments->Request.BaudRate) != 0) {
@@ -170,11 +201,10 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
         Arguments->ParseError = 1;
         return -1;
     }
-    if (Arguments->Request.InfoOnly &&
-        (Arguments->Request.NoReboot || Arguments->Request.NoBackup)) {
-        fprintf(stderr, "--no-reboot / --no-backup only apply to a transfer\n");
-        Arguments->ParseError = 1;
-        return -1;
+    if (Arguments->Request.InfoOnly) {
+        /* 配置里常带 no-reboot；info 不用这些开关 */
+        Arguments->Request.NoReboot = 0;
+        Arguments->Request.NoBackup = 0;
     }
     if (!Arguments->Request.InfoOnly && Arguments->Request.LocalFilePath == NULL) {
         Arguments->ParseError = 1;

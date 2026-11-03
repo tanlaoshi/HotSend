@@ -5,6 +5,7 @@ protocol_inc = include_directories('Protocol')
 
 protocol_sources = files(
   'Protocol/Crc32.c',
+  'Protocol/Config.c',
   'Protocol/TcpTransport.c',
   'Protocol/SerialTransport.c',
   'Protocol/SerialPrompt.c',
