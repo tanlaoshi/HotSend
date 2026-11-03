@@ -1,0 +1,13 @@
+# 编译产物只留目录；二进制与中间文件不入库
+Build/**
+!Build/.gitkeep
+*.o
+*.a
+*.so
+*.so.*
+*~
+*.swp
+.cache/
+meson-private/
+meson-info/
+compile_commands.json
