@@ -5,6 +5,7 @@
 
 #include "Widgets.h"
 #include "Protocol.h"
+#include "SerialPorts.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -158,24 +159,34 @@ void HotSendGuiWorkerRequestCancel(HotSendGuiWidgets *Widgets) {
 
 void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
     HotSendGuiWorkerJob *Job;
-    const char *Host;
+    const char *Endpoint;
     const char *FilePath;
     const char *PortText;
     GtkStringObject *PathObject;
     const char *BoardPath;
+    int UseSerial;
 
     if (Widgets == NULL || Widgets->TransferRunning) {
         return;
     }
-    Host = gtk_editable_get_text(GTK_EDITABLE(Widgets->HostEntry));
+    UseSerial = gtk_check_button_get_active(Widgets->SerialRadio) ? 1 : 0;
+    if (UseSerial) {
+        Endpoint = HotSendGuiDropDownSelectedText(Widgets->DeviceDropDown);
+        PortText = HotSendGuiDropDownSelectedText(Widgets->BaudDropDown);
+    } else {
+        Endpoint = gtk_editable_get_text(GTK_EDITABLE(Widgets->HostEntry));
+        PortText = gtk_editable_get_text(GTK_EDITABLE(Widgets->TcpPortEntry));
+    }
     FilePath = gtk_editable_get_text(GTK_EDITABLE(Widgets->FileEntry));
-    PortText = gtk_editable_get_text(GTK_EDITABLE(Widgets->PortEntry));
     PathObject = GTK_STRING_OBJECT(
         gtk_drop_down_get_selected_item(Widgets->BoardPathDropDown));
     BoardPath = PathObject != NULL ? gtk_string_object_get_string(PathObject)
                                    : "BLOCKS:Kernel.elf";
-    if (Host == NULL || Host[0] == 0 || FilePath == NULL || FilePath[0] == 0) {
-        HotSendGuiAppendLog(Widgets, "need host/device and file");
+    if (Endpoint == NULL || Endpoint[0] == 0 || FilePath == NULL || FilePath[0] == 0) {
+        HotSendGuiAppendLog(Widgets,
+                            Widgets->Language == 1
+                                ? (UseSerial ? "需要设备和文件" : "需要主机和文件")
+                                : (UseSerial ? "need device and file" : "need host and file"));
         return;
     }
 
@@ -188,15 +199,16 @@ void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
 
     Job = g_new0(HotSendGuiWorkerJob, 1);
     Job->Widgets = Widgets;
-    Job->HostOrDevice = g_strdup(Host);
+    Job->HostOrDevice = g_strdup(Endpoint);
     Job->FilePath = g_strdup(FilePath);
     Job->BoardPath = g_strdup(BoardPath);
-    Job->UseSerial = gtk_check_button_get_active(Widgets->UseSerialCheck) ? 1 : 0;
-    if (Job->UseSerial) {
+    Job->UseSerial = UseSerial;
+    if (UseSerial) {
         Job->PortOrBaud = PortText != NULL && PortText[0] != 0 ? atoi(PortText) : 115200;
     } else {
         Job->PortOrBaud =
-            PortText != NULL ? atoi(PortText) : (int)HotSendDefaultTcpPort;
+            PortText != NULL && PortText[0] != 0 ? atoi(PortText)
+                                                : (int)HotSendDefaultTcpPort;
     }
     Job->NoReboot = gtk_check_button_get_active(Widgets->NoRebootCheck) ? 1 : 0;
     Job->NoBackup = gtk_check_button_get_active(Widgets->NoBackupCheck) ? 1 : 0;

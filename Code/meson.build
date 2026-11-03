@@ -55,7 +55,11 @@ executable(
   files(
     'Gui/Main.c',
     'Gui/Widgets.c',
+    'Gui/Layout.c',
+    'Gui/LayoutSupport.c',
     'Gui/Worker.c',
+    'Gui/Locale.c',
+    'Gui/SerialPorts.c',
   ),
   include_directories: [protocol_inc, include_directories('Gui')],
   dependencies: [hotsend_protocol_dep, gtk4_dep],

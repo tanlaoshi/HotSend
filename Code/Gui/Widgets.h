@@ -6,11 +6,27 @@
 typedef struct HotSendGuiWidgets {
     GtkApplication *Application;
     GtkWindow *Window;
+    GtkCheckButton *EnglishRadio;
+    GtkCheckButton *ChineseRadio;
+    GtkCheckButton *SerialRadio;
+    GtkCheckButton *TcpRadio;
+    GtkStack *TransportStack;
+    GtkWidget *SerialPage;
+    GtkWidget *TcpPage;
+    GtkLabel *DeviceLabel;
+    GtkDropDown *DeviceDropDown;
+    GtkButton *RefreshDevicesButton;
+    GtkLabel *BaudLabel;
+    GtkDropDown *BaudDropDown;
+    GtkLabel *HostLabel;
     GtkEntry *HostEntry;
-    GtkEntry *PortEntry;
+    GtkLabel *TcpPortLabel;
+    GtkEntry *TcpPortEntry;
+    GtkLabel *FileLabel;
     GtkEntry *FileEntry;
+    GtkButton *BrowseButton;
+    GtkLabel *BoardPathLabel;
     GtkDropDown *BoardPathDropDown;
-    GtkCheckButton *UseSerialCheck;
     GtkCheckButton *NoRebootCheck;
     GtkCheckButton *NoBackupCheck;
     GtkCheckButton *DryRunCheck;
@@ -19,8 +35,11 @@ typedef struct HotSendGuiWidgets {
     GtkButton *AbortButton;
     GtkProgressBar *ProgressBar;
     GtkLabel *StatusLabel;
+    GtkFrame *LogFrame;
     GtkTextBuffer *LogBuffer;
     GtkTextView *LogView;
+    const char *BrowseDialogTitle;
+    int Language;
     GThread *WorkerThread;
     volatile int CancelRequested;
     volatile int TransferRunning;
@@ -30,4 +49,3 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets);
 void HotSendGuiAppendLog(HotSendGuiWidgets *Widgets, const char *Line);
 
 #endif
-

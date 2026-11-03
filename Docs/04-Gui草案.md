@@ -7,8 +7,9 @@
 | 区 | 控件 | 说明 |
 | --- | --- | --- |
 | 标题 | 「HotSend」 | 品牌级，不弱于正文标题 |
-| 传输 | TCP / 串口 二选一 | PR-4 已亮串口 |
-| 目标 | Host 输入；端口（默认 26992） | 串口时改为设备路径 |
+| 传输 | **Serial** / **TCP** 单选 | 切换下方各自页面（不混填） |
+| Serial 页 | Device；Baud（默认 115200） | |
+| TCP 页 | Host；TCP port（默认 26992） | 板需 `ksend serve` |
 | 文件 | 本地路径 +「浏览」 | 默认可记上次；候选对齐常见 `Kernel/Build/.../Kernel.elf` |
 | 板上路径 | 文本 + 预设下拉 | 例：`BLOCKS:Kernel.elf`、`D:Kernel.elf` |
 | 选项 | 不重启；跳过备份；Dry run；稳妥节流（默认关） | 文案短 |
