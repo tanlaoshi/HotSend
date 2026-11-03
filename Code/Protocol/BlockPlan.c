@@ -1,10 +1,10 @@
 /*
- * HotSendBlockPlan.c — 路径校验 / 块 CRC / 差量计划
+ * BlockPlan.c — 路径校验 / 块 CRC / 差量计划
  */
-#include "HotSendBlockPlan.h"
+#include "BlockPlan.h"
 
-#include "HotSendConstants.h"
-#include "HotSendCrc32.h"
+#include "Constants.h"
+#include "Crc32.h"
 
 #include <string.h>
 

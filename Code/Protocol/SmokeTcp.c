@@ -1,11 +1,11 @@
 /*
- * HotSendSmokeTcp.c — PR-1 主机自测钩子（薄 argv；完整 CLI 属 PR-2）
+ * SmokeTcp.c — PR-1 主机自测钩子（薄 argv；完整 CLI 属 PR-2）
  *
  * 用法：
  *   hotsend-smoke-tcp --host 192.168.31.41 --file /path/Kernel.elf \
  *     [--path D:Kernel.elf] [--tcp-port 26992] [--no-reboot]
  */
-#include "HotSendProtocol.h"
+#include "Protocol.h"
 
 #include <stdio.h>
 #include <stdlib.h>

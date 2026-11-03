@@ -1,7 +1,7 @@
 #ifndef HOT_SEND_CLI_ARGUMENTS_H
 #define HOT_SEND_CLI_ARGUMENTS_H
 
-#include "HotSendProtocol.h"
+#include "Protocol.h"
 
 typedef struct HotSendCliArguments {
     HotSendTransferRequest Request;

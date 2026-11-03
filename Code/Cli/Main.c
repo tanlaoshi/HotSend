@@ -1,8 +1,8 @@
 /*
- * HotSendCliMain.c — 正式 CLI 入口（PR-2）
+ * Main.c — 正式 CLI 入口（PR-2）
  */
-#include "HotSendCliArguments.h"
-#include "HotSendProtocol.h"
+#include "Arguments.h"
+#include "Protocol.h"
 
 #include <stdio.h>
 

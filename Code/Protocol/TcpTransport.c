@@ -1,9 +1,9 @@
 /*
- * HotSendTcpTransport.c — TCP 到板端 ksend serve
+ * TcpTransport.c — TCP 到板端 ksend serve
  */
-#include "HotSendTcpTransport.h"
+#include "TcpTransport.h"
 
-#include "HotSendConstants.h"
+#include "Constants.h"
 
 #include <arpa/inet.h>
 #include <errno.h>

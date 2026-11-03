@@ -1,7 +1,7 @@
 /*
- * HotSendCrc32.c — 主机侧 CRC32（zlib，对表 ksend.py）
+ * Crc32.c — 主机侧 CRC32（zlib，对表 ksend.py）
  */
-#include "HotSendCrc32.h"
+#include "Crc32.h"
 
 #include <zlib.h>
 

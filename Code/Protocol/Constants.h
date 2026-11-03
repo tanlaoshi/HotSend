@@ -1,5 +1,5 @@
 /*
- * HotSendConstants.h — 与板端 Ksend / Tools/ksend.py 对齐的协议常量
+ * Constants.h — 与板端 Ksend / Tools/ksend.py 对齐的协议常量
  */
 #ifndef HOT_SEND_CONSTANTS_H
 #define HOT_SEND_CONSTANTS_H

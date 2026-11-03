@@ -1,5 +1,5 @@
 /*
- * HotSendProtocol.h — 公开 API（TCP / 串口差量热传）
+ * Protocol.h — 公开 API（TCP / 串口差量热传）
  */
 #ifndef HOT_SEND_PROTOCOL_H
 #define HOT_SEND_PROTOCOL_H
@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "HotSendConstants.h"
+#include "Constants.h"
 
 typedef void (*HotSendLogFunction)(const char *Message, void *UserData);
 typedef void (*HotSendProgressFunction)(uint32_t Position, uint32_t Total,

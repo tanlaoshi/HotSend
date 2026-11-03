@@ -4,16 +4,16 @@ zlib_dep = dependency('zlib')
 protocol_inc = include_directories('Protocol')
 
 protocol_sources = files(
-  'Protocol/HotSendCrc32.c',
-  'Protocol/HotSendTcpTransport.c',
-  'Protocol/HotSendSerialTransport.c',
-  'Protocol/HotSendSerialPrompt.c',
-  'Protocol/HotSendSessionLines.c',
-  'Protocol/HotSendBlockPlan.c',
-  'Protocol/HotSendTransferSupport.c',
-  'Protocol/HotSendTransferSession.c',
-  'Protocol/HotSendInfoSession.c',
-  'Protocol/HotSendTransfer.c',
+  'Protocol/Crc32.c',
+  'Protocol/TcpTransport.c',
+  'Protocol/SerialTransport.c',
+  'Protocol/SerialPrompt.c',
+  'Protocol/SessionLines.c',
+  'Protocol/BlockPlan.c',
+  'Protocol/TransferSupport.c',
+  'Protocol/TransferSession.c',
+  'Protocol/InfoSession.c',
+  'Protocol/Transfer.c',
 )
 
 hotsend_protocol = static_library(
@@ -31,7 +31,7 @@ hotsend_protocol_dep = declare_dependency(
 
 executable(
   'hotsend-smoke-tcp',
-  'Protocol/HotSendSmokeTcp.c',
+  'Protocol/SmokeTcp.c',
   dependencies: hotsend_protocol_dep,
   install: false,
 )
@@ -39,8 +39,8 @@ executable(
 executable(
   'hotsend',
   files(
-    'Cli/HotSendCliMain.c',
-    'Cli/HotSendCliArguments.c',
+    'Cli/Main.c',
+    'Cli/Arguments.c',
   ),
   include_directories: [protocol_inc, include_directories('Cli')],
   dependencies: hotsend_protocol_dep,
@@ -52,9 +52,9 @@ gtk4_dep = dependency('gtk4')
 executable(
   'hotsend-gui',
   files(
-    'Gui/HotSendGuiMain.c',
-    'Gui/HotSendGuiWidgets.c',
-    'Gui/HotSendGuiWorker.c',
+    'Gui/Main.c',
+    'Gui/Widgets.c',
+    'Gui/Worker.c',
   ),
   include_directories: [protocol_inc, include_directories('Gui')],
   dependencies: [hotsend_protocol_dep, gtk4_dep],

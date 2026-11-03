@@ -1,8 +1,8 @@
 #ifndef HOT_SEND_TRANSFER_SESSION_H
 #define HOT_SEND_TRANSFER_SESSION_H
 
-#include "HotSendProtocol.h"
-#include "HotSendTransport.h"
+#include "Protocol.h"
+#include "Transport.h"
 
 /*
  * Transport 已打开。SerialCommandPath=1：先等壳提示符并以分块方式发 ksend 行

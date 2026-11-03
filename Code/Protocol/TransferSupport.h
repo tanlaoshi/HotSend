@@ -1,8 +1,8 @@
 #ifndef HOT_SEND_TRANSFER_SUPPORT_H
 #define HOT_SEND_TRANSFER_SUPPORT_H
 
-#include "HotSendSessionLines.h"
-#include "HotSendTransport.h"
+#include "SessionLines.h"
+#include "Transport.h"
 
 #include <stddef.h>
 #include <stdint.h>

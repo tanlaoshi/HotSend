@@ -1,12 +1,12 @@
 /*
- * HotSendInfoSession.c — `ksend info`（对表 Tools/ksend.py command_info）
+ * InfoSession.c — `ksend info`（对表 Tools/ksend.py command_info）
  */
-#include "HotSendInfoSession.h"
+#include "InfoSession.h"
 
-#include "HotSendBlockPlan.h"
-#include "HotSendSerialTransport.h"
-#include "HotSendSessionLines.h"
-#include "HotSendTransferSupport.h"
+#include "BlockPlan.h"
+#include "SerialTransport.h"
+#include "SessionLines.h"
+#include "TransferSupport.h"
 
 #include <stdio.h>
 #include <stdlib.h>

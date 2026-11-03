@@ -1,7 +1,7 @@
 #ifndef HOT_SEND_SESSION_LINES_H
 #define HOT_SEND_SESSION_LINES_H
 
-#include "HotSendTransport.h"
+#include "Transport.h"
 
 #include <stddef.h>
 #include <stdint.h>

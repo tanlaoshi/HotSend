@@ -1,10 +1,10 @@
 /*
- * HotSendSerialPrompt.c — 等壳提示符 / 分块发命令（对表 ksend.py）
+ * SerialPrompt.c — 等壳提示符 / 分块发命令（对表 ksend.py）
  *
  * 板串口提示为「Blocks> 」（见 Console HalConsoleWriteSerial）。
  * 须已退出 ksend serve / 其它占用串口的终端。
  */
-#include "HotSendSerialTransport.h"
+#include "SerialTransport.h"
 
 #include <errno.h>
 #include <string.h>

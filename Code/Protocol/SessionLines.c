@@ -1,9 +1,9 @@
 /*
- * HotSendSessionLines.c — READY/ACK/CRC 表行协议（对表 ksend.py）
+ * SessionLines.c — READY/ACK/CRC 表行协议（对表 ksend.py）
  */
-#include "HotSendSessionLines.h"
+#include "SessionLines.h"
 
-#include "HotSendConstants.h"
+#include "Constants.h"
 
 #include <errno.h>
 #include <stdio.h>

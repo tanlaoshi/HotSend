@@ -1,9 +1,9 @@
 /*
- * HotSendSerialTransport.c — 串口传输（对表 ksend.py SerialPort）
+ * SerialTransport.c — 串口传输（对表 ksend.py SerialPort）
  */
-#include "HotSendSerialTransport.h"
+#include "SerialTransport.h"
 
-#include "HotSendConstants.h"
+#include "Constants.h"
 
 #include <errno.h>
 #include <fcntl.h>

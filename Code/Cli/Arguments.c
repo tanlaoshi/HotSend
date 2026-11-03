@@ -1,7 +1,7 @@
 /*
- * HotSendCliArguments.c — 命令行参数（对表 Tools/ksend.py 常用项）
+ * Arguments.c — 命令行参数（对表 Tools/ksend.py 常用项）
  */
-#include "HotSendCliArguments.h"
+#include "Arguments.h"
 
 #include <stdio.h>
 #include <stdlib.h>

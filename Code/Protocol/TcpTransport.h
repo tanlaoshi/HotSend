@@ -1,7 +1,7 @@
 #ifndef HOT_SEND_TCP_TRANSPORT_H
 #define HOT_SEND_TCP_TRANSPORT_H
 
-#include "HotSendTransport.h"
+#include "Transport.h"
 
 /*
  * 0=成功；非 0=本地/连接失败。成功后 *Out 可读写，用完 Close。

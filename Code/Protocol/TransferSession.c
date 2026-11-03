@@ -1,13 +1,13 @@
 /*
- * HotSendTransferSession.c — READY→差量→trailer→判据（TCP/串口共用）
+ * TransferSession.c — READY→差量→trailer→判据（TCP/串口共用）
  */
-#include "HotSendTransferSession.h"
+#include "TransferSession.h"
 
-#include "HotSendBlockPlan.h"
-#include "HotSendConstants.h"
-#include "HotSendSerialTransport.h"
-#include "HotSendSessionLines.h"
-#include "HotSendTransferSupport.h"
+#include "BlockPlan.h"
+#include "Constants.h"
+#include "SerialTransport.h"
+#include "SessionLines.h"
+#include "TransferSupport.h"
 
 #include <stdio.h>
 #include <stdlib.h>

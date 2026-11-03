@@ -1,10 +1,10 @@
 /*
- * HotSendGuiWorker.c — 后台线程跑 Protocol；idle 回主线程刷 UI
+ * Worker.c — 后台线程跑 Protocol；idle 回主线程刷 UI
  */
-#include "HotSendGuiWorker.h"
+#include "Worker.h"
 
-#include "HotSendGuiWidgets.h"
-#include "HotSendProtocol.h"
+#include "Widgets.h"
+#include "Protocol.h"
 
 #include <stdio.h>
 #include <stdlib.h>

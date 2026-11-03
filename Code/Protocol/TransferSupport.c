@@ -1,9 +1,9 @@
 /*
- * HotSendTransferSupport.c — 读文件 / 触发行 / 帧拼装（Transfer 辅助）
+ * TransferSupport.c — 读文件 / 触发行 / 帧拼装（Transfer 辅助）
  */
-#include "HotSendTransferSupport.h"
+#include "TransferSupport.h"
 
-#include "HotSendConstants.h"
+#include "Constants.h"
 
 #include <errno.h>
 #include <stdio.h>

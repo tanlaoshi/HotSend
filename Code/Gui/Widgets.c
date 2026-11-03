@@ -1,9 +1,9 @@
 /*
- * HotSendGuiWidgets.c — GTK4 一屏布局（PR-3）
+ * Widgets.c — GTK4 一屏布局（PR-3）
  */
-#include "HotSendGuiWidgets.h"
+#include "Widgets.h"
 
-#include "HotSendGuiWorker.h"
+#include "Worker.h"
 
 void HotSendGuiAppendLog(HotSendGuiWidgets *Widgets, const char *Line) {
     GtkTextIter End;

@@ -1,12 +1,12 @@
 /*
- * HotSendTransfer.c — TCP / 串口入口（会话见 HotSendTransferSession / InfoSession）
+ * Transfer.c — TCP / 串口入口（会话见 HotSendTransferSession / InfoSession）
  */
-#include "HotSendProtocol.h"
+#include "Protocol.h"
 
-#include "HotSendInfoSession.h"
-#include "HotSendSerialTransport.h"
-#include "HotSendTcpTransport.h"
-#include "HotSendTransferSession.h"
+#include "InfoSession.h"
+#include "SerialTransport.h"
+#include "TcpTransport.h"
+#include "TransferSession.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -1,7 +1,7 @@
 /*
- * HotSendGuiMain.c — GTK4 应用入口（PR-3）
+ * Main.c — GTK4 应用入口（PR-3）
  */
-#include "HotSendGuiWidgets.h"
+#include "Widgets.h"
 
 #include <gtk/gtk.h>
 #include <string.h>
