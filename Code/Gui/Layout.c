@@ -3,6 +3,7 @@
  */
 #include "Widgets.h"
 
+#include "Icon.h"
 #include "LayoutSupport.h"
 #include "Locale.h"
 #include "SerialPorts.h"
@@ -59,6 +60,7 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     Widgets->Window = GTK_WINDOW(Window);
     gtk_window_set_title(Widgets->Window, "HotSend");
     gtk_window_set_default_size(Widgets->Window, 640, 600);
+    HotSendGuiApplyWindowIcon(Widgets->Window);
 
     Outer = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_widget_set_margin_top(Outer, 16);
