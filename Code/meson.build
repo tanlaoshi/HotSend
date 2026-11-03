@@ -31,3 +31,14 @@ executable(
   dependencies: hotsend_protocol_dep,
   install: false,
 )
+
+executable(
+  'hotsend',
+  files(
+    'Cli/HotSendCliMain.c',
+    'Cli/HotSendCliArguments.c',
+  ),
+  include_directories: [protocol_inc, include_directories('Cli')],
+  dependencies: hotsend_protocol_dep,
+  install: false,
+)
