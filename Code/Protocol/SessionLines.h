@@ -23,8 +23,11 @@ int HotSendReadBoardCrcTable(HotSendTransport *Transport, uint32_t BlockCount,
                              uint32_t *OutCrcs, double TimeoutSeconds,
                              HotSendLogFunction Log, void *UserData);
 
-/* 从 "KSEND READY size=… block=… n=…" 取整型字段；缺字段返回 -1 */
+/*
+ * 从 "KSEND READY size=… block=… n=… [win=…]" 取字段。
+ * size/block/n 缺一返回 -1；win 缺省为 1（旧板停等）。
+ */
 int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBlock,
-                            uint32_t *OutCount);
+                            uint32_t *OutCount, uint32_t *OutWindow);
 
 #endif

@@ -48,6 +48,7 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
     uint32_t WholeCrc;
     uint32_t BoardSize = 0;
     uint32_t BoardBlock = 0;
+    uint32_t BoardWindow = 1;
     const char *Target;
     char Trigger[160];
     char Line[512];
@@ -116,10 +117,19 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
         ExitCode = HotSendExitBoardFail;
         goto Done;
     }
-    if (HotSendParseReadyFields(Line, &BoardSize, &BoardBlock, &BoardCount) != 0) {
+    if (HotSendParseReadyFields(Line, &BoardSize, &BoardBlock, &BoardCount,
+                                &BoardWindow) != 0) {
         ExitCode = HotSendExitProtocol;
         goto Done;
     }
+    if (BoardWindow == 0u) {
+        BoardWindow = 1u;
+    }
+    if (BoardWindow > 16u) {
+        BoardWindow = 16u;
+    }
+    snprintf(Note, sizeof(Note), "window: %u", (unsigned)BoardWindow);
+    HotSendSessionLog(Request, Note);
     if (BoardBlock != HotSendBlockBytes) {
         ExitCode = HotSendExitProtocol;
         goto Done;
@@ -171,15 +181,15 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
         goto Done;
     }
 
-    for (Position = 0; Position < PlanCount; Position++) {
-        uint32_t BlockIndex = Plan[Position];
-        size_t Offset = (size_t)BlockIndex * HotSendBlockBytes;
-        uint32_t Length = (uint32_t)(FileLength - Offset);
-        unsigned char Header[16];
-        int Attempt = 0;
-        int Ack;
+    Position = 0;
+    while (Position < PlanCount) {
+        uint32_t SendCount = PlanCount - Position;
+        uint32_t SentInWindow;
+        uint32_t Acked;
         uint32_t SentBytes = 0;
         uint32_t Scan;
+        int GotNak = 0;
+        int Attempt;
 
         if (Request->CancelFlag != NULL && *Request->CancelFlag != 0) {
             HotSendSessionLog(Request, "cancel: aborting transfer");
@@ -187,14 +197,22 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
             ExitCode = HotSendExitProtocol;
             goto Done;
         }
-        if (Length > HotSendBlockBytes) {
-            Length = HotSendBlockBytes;
+        if (SendCount > BoardWindow) {
+            SendCount = BoardWindow;
         }
-        HotSendPutUint32Little(Header + 0, HotSendMagic);
-        HotSendPutUint32Little(Header + 4, BlockIndex);
-        HotSendPutUint32Little(Header + 8, Length);
-        HotSendPutUint32Little(Header + 12, LocalCrcs[BlockIndex]);
-        for (;;) {
+        for (SentInWindow = 0; SentInWindow < SendCount; SentInWindow++) {
+            uint32_t BlockIndex = Plan[Position + SentInWindow];
+            size_t Offset = (size_t)BlockIndex * HotSendBlockBytes;
+            uint32_t Length = (uint32_t)(FileLength - Offset);
+            unsigned char Header[16];
+
+            if (Length > HotSendBlockBytes) {
+                Length = HotSendBlockBytes;
+            }
+            HotSendPutUint32Little(Header + 0, HotSendMagic);
+            HotSendPutUint32Little(Header + 4, BlockIndex);
+            HotSendPutUint32Little(Header + 8, Length);
+            HotSendPutUint32Little(Header + 12, LocalCrcs[BlockIndex]);
             if (Transport->WriteAll(Transport, Header, sizeof(Header),
                                     Request->AckTimeoutSeconds) != 0 ||
                 Transport->WriteAll(Transport, FileData + Offset, Length,
@@ -202,22 +220,70 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
                 ExitCode = HotSendExitProtocol;
                 goto Done;
             }
-            Ack = HotSendReadBlockAck(Transport, Request->AckTimeoutSeconds, Request->Log,
-                                      Request->UserData);
+        }
+        for (Acked = 0; Acked < SendCount; Acked++) {
+            int Ack = HotSendReadBlockAck(Transport, Request->AckTimeoutSeconds,
+                                          Request->Log, Request->UserData);
+
             if (Ack == HotSendAckWritten) {
+                continue;
+            }
+            if (Ack == HotSendAckRetry) {
+                GotNak = 1;
                 break;
             }
-            Attempt++;
-            if (Attempt > (int)HotSendRetryMax) {
-                ExitCode = HotSendWaitVerdict(Transport, Request->VerifyTimeoutSeconds,
-                                              Request->Log, Request->UserData);
-                goto Done;
-            }
-            snprintf(Note, sizeof(Note), "block %u: retry %d/%d", (unsigned)BlockIndex,
-                     Attempt, HotSendRetryMax);
-            HotSendSessionLog(Request, Note);
+            ExitCode = HotSendExitProtocol;
+            goto Done;
         }
-        for (Scan = 0; Scan <= Position; Scan++) {
+        if (GotNak) {
+            uint32_t BlockIndex;
+            size_t Offset;
+            uint32_t Length;
+            unsigned char Header[16];
+
+            Position += Acked;
+            BlockIndex = Plan[Position];
+            Offset = (size_t)BlockIndex * HotSendBlockBytes;
+            Length = (uint32_t)(FileLength - Offset);
+            if (Length > HotSendBlockBytes) {
+                Length = HotSendBlockBytes;
+            }
+            HotSendPutUint32Little(Header + 0, HotSendMagic);
+            HotSendPutUint32Little(Header + 4, BlockIndex);
+            HotSendPutUint32Little(Header + 8, Length);
+            HotSendPutUint32Little(Header + 12, LocalCrcs[BlockIndex]);
+            Attempt = 0;
+            for (;;) {
+                if (Transport->WriteAll(Transport, Header, sizeof(Header),
+                                        Request->AckTimeoutSeconds) != 0 ||
+                    Transport->WriteAll(Transport, FileData + Offset, Length,
+                                        Request->AckTimeoutSeconds) != 0) {
+                    ExitCode = HotSendExitProtocol;
+                    goto Done;
+                }
+                {
+                    int Ack = HotSendReadBlockAck(Transport, Request->AckTimeoutSeconds,
+                                                  Request->Log, Request->UserData);
+
+                    if (Ack == HotSendAckWritten) {
+                        break;
+                    }
+                }
+                Attempt++;
+                if (Attempt > (int)HotSendRetryMax) {
+                    ExitCode = HotSendWaitVerdict(Transport, Request->VerifyTimeoutSeconds,
+                                                  Request->Log, Request->UserData);
+                    goto Done;
+                }
+                snprintf(Note, sizeof(Note), "block %u: retry %d/%d",
+                         (unsigned)BlockIndex, Attempt, HotSendRetryMax);
+                HotSendSessionLog(Request, Note);
+            }
+            Position++;
+        } else {
+            Position += SendCount;
+        }
+        for (Scan = 0; Scan < Position; Scan++) {
             size_t Off = (size_t)Plan[Scan] * HotSendBlockBytes;
             uint32_t Len = (uint32_t)(FileLength - Off);
 
@@ -227,25 +293,24 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
             SentBytes += Len;
         }
         if (Request->Progress != NULL) {
-            Request->Progress(Position + 1, PlanCount, SentBytes, Request->UserData);
+            Request->Progress(Position, PlanCount, SentBytes, Request->UserData);
         }
         snprintf(Note, sizeof(Note), "sent %u/%u blocks (%u%%, %u KB)",
-                 (unsigned)(Position + 1), (unsigned)PlanCount,
-                 PlanCount ? (100u * (Position + 1)) / PlanCount : 100u,
+                 (unsigned)Position, (unsigned)PlanCount,
+                 PlanCount ? (100u * Position) / PlanCount : 100u,
                  (unsigned)(SentBytes / 1024u));
         HotSendSessionLog(Request, Note);
-        /* 对表 ksend.py：仅 PaceMilliseconds>0 才歇（有线默认不睡） */
         {
             int PaceMilliseconds = Request->PaceMilliseconds;
 
             if (PaceMilliseconds <= 0 && Request->SteadyThrottle) {
-                PaceMilliseconds = 500; /* Gui/CLI 稳妥节流 → 等同 --pace-ms 500 */
+                PaceMilliseconds = 500;
             }
             if (PaceMilliseconds > 0) {
                 double PaceSeconds = (double)PaceMilliseconds / 1000.0;
 
                 HotSendSessionSleepSeconds(PaceSeconds);
-                if (((Position + 1) % 16u) == 0u) {
+                if ((Position % 16u) == 0u) {
                     double Gap = PaceSeconds > 0.5 ? PaceSeconds : 0.5;
 
                     HotSendSessionSleepSeconds(Gap * 4.0);

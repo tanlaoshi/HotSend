@@ -169,7 +169,7 @@ int HotSendReadBoardCrcTable(HotSendTransport *Transport, uint32_t BlockCount,
 }
 
 int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBlock,
-                            uint32_t *OutCount) {
+                            uint32_t *OutCount, uint32_t *OutWindow) {
     const char *Cursor;
     int HaveSize = 0;
     int HaveBlock = 0;
@@ -177,6 +177,7 @@ int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBl
     uint32_t Size = 0;
     uint32_t Block = 0;
     uint32_t Count = 0;
+    uint32_t Window = 1;
 
     if (Line == NULL) {
         return -1;
@@ -198,6 +199,14 @@ int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBl
         } else if (strncmp(Cursor, "n=", 2) == 0) {
             Count = (uint32_t)strtoul(Cursor + 2, NULL, 10);
             HaveCount = 1;
+        } else if (strncmp(Cursor, "win=", 4) == 0) {
+            Window = (uint32_t)strtoul(Cursor + 4, NULL, 10);
+            if (Window == 0u) {
+                Window = 1u;
+            }
+            if (Window > 16u) {
+                Window = 16u;
+            }
         }
         while (*Cursor != 0 && *Cursor != ' ') {
             Cursor++;
@@ -214,6 +223,9 @@ int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBl
     }
     if (OutCount) {
         *OutCount = Count;
+    }
+    if (OutWindow) {
+        *OutWindow = Window;
     }
     return 0;
 }
