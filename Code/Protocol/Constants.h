@@ -33,4 +33,12 @@ enum HotSendExitCode {
     HotSendExitLocal = 3
 };
 
+/* READY via=（nuc-2）；缺省=Unknown（旧板） */
+enum HotSendReadyVia {
+    HotSendViaUnknown = 0,
+    HotSendViaWired = 1,
+    HotSendViaWifi = 2,
+    HotSendViaSerial = 3
+};
+
 #endif

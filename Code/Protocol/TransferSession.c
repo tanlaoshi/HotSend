@@ -49,6 +49,8 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
     uint32_t BoardSize = 0;
     uint32_t BoardBlock = 0;
     uint32_t BoardWindow = 1;
+    int BoardVia = HotSendViaUnknown;
+    int PathWifi = 0;
     const char *Target;
     char Trigger[160];
     char Line[512];
@@ -118,7 +120,7 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
         goto Done;
     }
     if (HotSendParseReadyFields(Line, &BoardSize, &BoardBlock, &BoardCount,
-                                &BoardWindow) != 0) {
+                                &BoardWindow, &BoardVia) != 0) {
         ExitCode = HotSendExitProtocol;
         goto Done;
     }
@@ -128,7 +130,22 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
     if (BoardWindow > 16u) {
         BoardWindow = 16u;
     }
-    snprintf(Note, sizeof(Note), "window: %u", (unsigned)BoardWindow);
+    /*
+     * nuc-2 分路径：Wi‑Fi 不走有线窗；缺 via= 的旧板用 TCP+win=1 推断 Wi‑Fi。
+     * 有线：仅显式 pace-ms>0 才睡。Wi‑Fi：pace 未设则 500（同 steady-throttle）。
+     */
+    PathWifi = (BoardVia == HotSendViaWifi) ||
+               (BoardVia == HotSendViaUnknown && !SerialCommandPath &&
+                BoardWindow <= 1u);
+    if (BoardVia == HotSendViaWired && BoardWindow > 1u) {
+        PathWifi = 0;
+    }
+    snprintf(Note, sizeof(Note), "window: %u via=%s path=%s", (unsigned)BoardWindow,
+             BoardVia == HotSendViaWifi     ? "wifi"
+             : BoardVia == HotSendViaWired  ? "wired"
+             : BoardVia == HotSendViaSerial ? "serial"
+                                           : "unknown",
+             PathWifi ? "wifi" : (SerialCommandPath ? "serial" : "wired"));
     HotSendSessionLog(Request, Note);
     if (BoardBlock != HotSendBlockBytes) {
         ExitCode = HotSendExitProtocol;
@@ -303,8 +320,13 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
         {
             int PaceMilliseconds = Request->PaceMilliseconds;
 
-            if (PaceMilliseconds <= 0 && Request->SteadyThrottle) {
-                PaceMilliseconds = 500;
+            if (PathWifi) {
+                if (PaceMilliseconds <= 0) {
+                    PaceMilliseconds = 500;
+                }
+            } else if (PaceMilliseconds <= 0) {
+                /* 有线/串口：不因 SteadyThrottle 默认睡 */
+                PaceMilliseconds = 0;
             }
             if (PaceMilliseconds > 0) {
                 double PaceSeconds = (double)PaceMilliseconds / 1000.0;

@@ -169,7 +169,7 @@ int HotSendReadBoardCrcTable(HotSendTransport *Transport, uint32_t BlockCount,
 }
 
 int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBlock,
-                            uint32_t *OutCount, uint32_t *OutWindow) {
+                            uint32_t *OutCount, uint32_t *OutWindow, int *OutVia) {
     const char *Cursor;
     int HaveSize = 0;
     int HaveBlock = 0;
@@ -178,6 +178,7 @@ int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBl
     uint32_t Block = 0;
     uint32_t Count = 0;
     uint32_t Window = 1;
+    int Via = HotSendViaUnknown;
 
     if (Line == NULL) {
         return -1;
@@ -207,6 +208,16 @@ int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBl
             if (Window > 16u) {
                 Window = 16u;
             }
+        } else if (strncmp(Cursor, "via=", 4) == 0) {
+            const char *Value = Cursor + 4;
+
+            if (strncmp(Value, "wired", 5) == 0) {
+                Via = HotSendViaWired;
+            } else if (strncmp(Value, "wifi", 4) == 0) {
+                Via = HotSendViaWifi;
+            } else if (strncmp(Value, "serial", 6) == 0) {
+                Via = HotSendViaSerial;
+            }
         }
         while (*Cursor != 0 && *Cursor != ' ') {
             Cursor++;
@@ -226,6 +237,9 @@ int HotSendParseReadyFields(const char *Line, uint32_t *OutSize, uint32_t *OutBl
     }
     if (OutWindow) {
         *OutWindow = Window;
+    }
+    if (OutVia) {
+        *OutVia = Via;
     }
     return 0;
 }
