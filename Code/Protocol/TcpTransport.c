@@ -184,6 +184,20 @@ static int HotSendTcpReadLine(HotSendTransport *Self, char *Line, size_t Capacit
         }
         Remain = Deadline - HotSendNowSeconds();
         if (Remain <= 0.0) {
+            /*
+             * 超时不得丢掉已吃进 Line 的字节：Wi‑Fi 首段常只有 "KSEN"，
+             * WaitForLinePrefix 1s 切片超时后再读会变成 board: D READY /
+             * DY size=（Duo 2026-11-09 真机）。
+             */
+            if (OutLength > 0) {
+                if (OutLength + State->BufferLength > (size_t)HotSendTcpReceiveCapacity) {
+                    errno = EMSGSIZE;
+                    return -1;
+                }
+                memmove(State->Buffer + OutLength, State->Buffer, State->BufferLength);
+                memcpy(State->Buffer, Line, OutLength);
+                State->BufferLength += OutLength;
+            }
             errno = ETIMEDOUT;
             return -1;
         }
