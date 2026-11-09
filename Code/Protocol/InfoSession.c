@@ -74,7 +74,8 @@ int HotSendInfoSession(const HotSendTransferRequest *Request,
         return HotSendExitLocal;
     }
     if (SerialCommandPath) {
-        if (HotSendSerialWaitShellPrompt(Transport, 15.0) != 0) {
+        if (HotSendSerialWaitShellPrompt(Transport,
+                                         Request->ReadyTimeoutSeconds) != 0) {
             HotSendInfoLog(Request, "serial: no shell prompt for info");
             return HotSendExitProtocol;
         }

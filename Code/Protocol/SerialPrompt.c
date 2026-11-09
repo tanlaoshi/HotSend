@@ -3,6 +3,10 @@
  *
  * 板串口提示为「Blocks> 」（见 Console HalConsoleWriteSerial）。
  * 须已退出 ksend serve / 其它占用串口的终端。
+ *
+ * nudge 只发 \\r（ksend.py 同；\\r\\n 会被板端当两次 Enter → 双 Blocks>）。
+ * 冷起：先听 Announce 的 Blocks>，勿抢先敲回车——否则 FIFO 里的 \\r
+ * 会在 ready 后再空 Enter，开机串口出现两次提示符。
  */
 #include "SerialTransport.h"
 
@@ -38,41 +42,60 @@ static int HotSendSerialTailHasPrompt(const unsigned char *Data, size_t Length) 
 
 int HotSendSerialWaitShellPrompt(HotSendTransport *Transport, double TimeoutSeconds) {
     double Deadline;
-    unsigned char Nudge[2] = {(unsigned char)'\r', (unsigned char)'\n'};
+    double LastRx;
+    double NextNudge;
+    unsigned char Nudge = (unsigned char)'\r';
     unsigned char Window[256];
     size_t WindowLength = 0;
-    int NudgeRound;
 
     if (Transport == NULL) {
         return -1;
     }
+    /*
+     * 冷起：只读、勿狂打 CR（Pi 进桌面后协作调度会被串口洪水饿死鼠，
+     * 2026-11-08）。见过输出后静默 ≥1.2s 再 nudge；整段 Timeout 内等 `>`。
+     */
+    if (TimeoutSeconds < 5.0) {
+        TimeoutSeconds = 5.0;
+    }
     Deadline = HotSendSerialPromptNow() + TimeoutSeconds;
-    for (NudgeRound = 0; NudgeRound < 3; NudgeRound++) {
-        if (Transport->WriteAll(Transport, Nudge, sizeof(Nudge), 2.0) != 0) {
-            return -1;
-        }
-        while (HotSendSerialPromptNow() < Deadline) {
-            unsigned char Byte;
-            double Remain = Deadline - HotSendSerialPromptNow();
+    LastRx = HotSendSerialPromptNow();
+    /*
+     * 开串口常 tcflush 掉已有 Blocks>：未见 RX 时 1.2s 后发一次 \\r 唤醒。
+     * 冷起有 boot 字：听 Announce 的提示符，勿先 nudge（防双 Blocks>）。
+     */
+    NextNudge = HotSendSerialPromptNow() + 1.2;
+    while (HotSendSerialPromptNow() < Deadline) {
+        unsigned char Byte;
+        double Now = HotSendSerialPromptNow();
+        double Remain = Deadline - Now;
 
-            if (Remain <= 0.0) {
-                break;
-            }
-            if (Transport->ReadExact(Transport, &Byte, 1,
-                                     Remain < 0.4 ? Remain : 0.4) != 0) {
-                if (errno == ETIMEDOUT) {
-                    break; /* 本轮无更多字节，再 nudge */
-                }
+        if (Now >= NextNudge) {
+            if (Transport->WriteAll(Transport, &Nudge, 1, 2.0) != 0) {
                 return -1;
             }
-            if (WindowLength + 1 >= sizeof(Window)) {
-                memmove(Window, Window + 1, sizeof(Window) - 1);
-                WindowLength = sizeof(Window) - 1;
+            /* 有 RX 后更稀；未见 RX（已 flush 的 idle 壳）也只 2s 一敲 */
+            NextNudge = Now + 2.0;
+        }
+        if (Transport->ReadExact(Transport, &Byte, 1,
+                                 Remain < 0.4 ? Remain : 0.4) != 0) {
+            if (errno == ETIMEDOUT) {
+                if ((Now - LastRx) >= 1.2 && NextNudge > Now) {
+                    NextNudge = Now; /* 静默够久 → 下轮允许 nudge */
+                }
+                continue;
             }
-            Window[WindowLength++] = Byte;
-            if (HotSendSerialTailHasPrompt(Window, WindowLength)) {
-                return 0;
-            }
+            return -1;
+        }
+        LastRx = Now;
+        NextNudge = Now + 1.2; /* 有输出时推迟 nudge */
+        if (WindowLength + 1 >= sizeof(Window)) {
+            memmove(Window, Window + 1, sizeof(Window) - 1);
+            WindowLength = sizeof(Window) - 1;
+        }
+        Window[WindowLength++] = Byte;
+        if (HotSendSerialTailHasPrompt(Window, WindowLength)) {
+            return 0;
         }
     }
     errno = ETIMEDOUT;

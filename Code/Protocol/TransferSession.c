@@ -92,7 +92,9 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
         goto Done;
     }
     if (SerialCommandPath) {
-        if (HotSendSerialWaitShellPrompt(Transport, 15.0) != 0) {
+        /* 用 --ready-timeout：冷起到 Blocks> 常 >15s（Pi） */
+        if (HotSendSerialWaitShellPrompt(Transport,
+                                         Request->ReadyTimeoutSeconds) != 0) {
             HotSendSessionLog(Request,
                               "serial: no shell prompt (need Blocks> ; exit ksend "
                               "serve; close picocom)");

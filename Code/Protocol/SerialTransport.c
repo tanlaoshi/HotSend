@@ -144,8 +144,13 @@ static int HotSendSerialReadExact(HotSendTransport *Self, void *Data, size_t Len
                 errno = ETIMEDOUT;
                 return -1;
             }
+            /*
+             * NONBLOCK open 后 errno 常留 EAGAIN；Fill 超时返回 0 且不改 errno。
+             * 若不清掉，WaitShellPrompt 会把「暂无字节」当成硬失败，秒退 no shell prompt。
+             */
+            errno = 0;
             if (HotSendSerialFill(State, Remain) <= 0) {
-                if (errno == 0) {
+                if (errno == 0 || errno == EAGAIN || errno == EWOULDBLOCK) {
                     errno = ETIMEDOUT;
                 }
                 return -1;
