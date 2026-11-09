@@ -74,8 +74,8 @@ int HotSendSerialWaitShellPrompt(HotSendTransport *Transport, double TimeoutSeco
             if (Transport->WriteAll(Transport, &Nudge, 1, 2.0) != 0) {
                 return -1;
             }
-            /* 有 RX 后更稀；未见 RX（已 flush 的 idle 壳）也只 2s 一敲 */
-            NextNudge = Now + 2.0;
+            /* 有 RX 后更稀；未见 RX（已 flush 的 idle 壳）100ms 一敲 */
+            NextNudge = Now + 0.1;
         }
         if (Transport->ReadExact(Transport, &Byte, 1,
                                  Remain < 0.4 ? Remain : 0.4) != 0) {
