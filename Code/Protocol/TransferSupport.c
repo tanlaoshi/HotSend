@@ -49,20 +49,35 @@ int HotSendLoadLocalFile(const char *Path, unsigned char **OutData, size_t *OutL
 }
 
 int HotSendBuildTriggerCommand(char *Out, size_t Capacity, const char *Target,
-                               int NoReboot, int NoBackup) {
+                               int NoReboot, int NoBackup, size_t ExpectedSize) {
     int Written;
+    int NonDefaultTarget =
+        strcmp(Target, HOT_SEND_DEFAULT_TARGET_PATH) != 0 ? 1 : 0;
 
-    if (strcmp(Target, HOT_SEND_DEFAULT_TARGET_PATH) == 0 && !NoReboot && !NoBackup) {
+    /*
+     * PR-KSEND-FAT-WRITE-FAST：带 size= 让板一次预扩链并跳过清簇。
+     * ExpectedSize==0 时保持旧短触发（兼容旧板）。
+     */
+    if (ExpectedSize == 0 && !NonDefaultTarget && !NoReboot && !NoBackup) {
         if (Capacity < 7) {
             return -1;
         }
         memcpy(Out, "ksend\n", 7);
         return 0;
     }
-    Written = snprintf(Out, Capacity, "ksend%s%s%s%s\n", NoReboot ? " --no-reboot" : "",
-                       NoBackup ? " --no-backup" : "",
-                       strcmp(Target, HOT_SEND_DEFAULT_TARGET_PATH) != 0 ? " " : "",
-                       strcmp(Target, HOT_SEND_DEFAULT_TARGET_PATH) != 0 ? Target : "");
+    if (ExpectedSize > 0) {
+        Written = snprintf(Out, Capacity, "ksend%s%s size=%zu%s%s\n",
+                           NoReboot ? " --no-reboot" : "",
+                           NoBackup ? " --no-backup" : "", ExpectedSize,
+                           NonDefaultTarget ? " " : "",
+                           NonDefaultTarget ? Target : "");
+    } else {
+        Written = snprintf(Out, Capacity, "ksend%s%s%s%s\n",
+                           NoReboot ? " --no-reboot" : "",
+                           NoBackup ? " --no-backup" : "",
+                           NonDefaultTarget ? " " : "",
+                           NonDefaultTarget ? Target : "");
+    }
     if (Written < 0 || (size_t)Written >= Capacity) {
         return -1;
     }
@@ -88,11 +103,12 @@ int HotSendSendAbortFrame(HotSendTransport *Transport) {
 
 int HotSendWaitVerdict(HotSendTransport *Transport, double TimeoutSeconds,
                        HotSendLogFunction Log, void *UserData) {
-    /* 允无尾随空格：板行是 "KSEND OK crc=…" */
+    /* 允无尾随空格：板行是 "KSEND OK crc=…"；亦认丢前缀的残行 */
     static const char *const Prefixes[] = {"KSEND OK", "KSEND FAIL"};
-    char Line[256];
-    char Note[128];
+    char Line[512];
+    char Note[160];
     int Status;
+    int IsFail;
 
     if (Log != NULL) {
         Log("waiting for KSEND OK/FAIL …", UserData);
@@ -111,7 +127,10 @@ int HotSendWaitVerdict(HotSendTransport *Transport, double TimeoutSeconds,
     if (Log != NULL) {
         Log(Line, UserData);
     }
-    if (strncmp(Line, "KSEND FAIL", 10) == 0) {
+    IsFail = (strncmp(Line, "KSEND FAIL", 10) == 0) ||
+             (strstr(Line, "FAIL") != NULL &&
+              (strstr(Line, "reason=") != NULL || strstr(Line, "at=") != NULL));
+    if (IsFail) {
         static const char *const RestorePrefixes[] = {"KSEND RESTORED",
                                                       "KSEND RESTORE FAIL"};
         char RestoreLine[256];

@@ -59,7 +59,8 @@ int HotSendWaitForLinePrefix(HotSendTransport *Transport, const char *const *Pre
             HotSendSessionLog(Log, UserData, Note);
             NextHeartbeat = HotSendSessionNow() + 5.0;
         }
-        Status = Transport->ReadLine(Transport, Line, Capacity, Remain < 1.0 ? Remain : 1.0);
+        /* 2s 切片：OK 行变长后 1s 中途超时更易丢 KSEN 前缀 */
+        Status = Transport->ReadLine(Transport, Line, Capacity, Remain < 2.0 ? Remain : 2.0);
         if (Status != 0) {
             if (errno == ETIMEDOUT) {
                 continue;
@@ -68,6 +69,33 @@ int HotSendWaitForLinePrefix(HotSendTransport *Transport, const char *const *Pre
         }
         for (Index = 0; Index < PrefixCount; Index++) {
             if (HotSendLineStartsWith(Line, Prefixes[Index])) {
+                return 0;
+            }
+        }
+        /*
+         * TCP ReadLine 1s 切片曾丢掉行首（KSEN→board: D OK / D READY）。
+         * 缓冲回填后仍可能残行：认 OK/FAIL 判据尾巴，勿空等到复位。
+         */
+        for (Index = 0; Index < PrefixCount; Index++) {
+            if (strcmp(Prefixes[Index], "KSEND OK") == 0 &&
+                strstr(Line, "OK crc=") != NULL &&
+                strstr(Line, "written=") != NULL) {
+                return 0;
+            }
+            if (strcmp(Prefixes[Index], "KSEND FAIL") == 0 &&
+                strstr(Line, "FAIL") != NULL &&
+                (strstr(Line, "reason=") != NULL || strstr(Line, "at=") != NULL)) {
+                return 0;
+            }
+            /*
+             * 残行也可能丢掉 "READY" 本身：KSEND REA|DY size=0 block=… n=…
+             * （2026-11-11 NUC：主机空等 → 板 header 30s 超时 err=1）。
+             */
+            if (strcmp(Prefixes[Index], "KSEND READY") == 0 &&
+                strstr(Line, "size=") != NULL && strstr(Line, "block=") != NULL &&
+                strstr(Line, "n=") != NULL &&
+                (strstr(Line, "READY") != NULL || strstr(Line, "win=") != NULL ||
+                 strstr(Line, "via=") != NULL)) {
                 return 0;
             }
         }

@@ -9,7 +9,7 @@
 
 int HotSendLoadLocalFile(const char *Path, unsigned char **OutData, size_t *OutLength);
 int HotSendBuildTriggerCommand(char *Out, size_t Capacity, const char *Target,
-                               int NoReboot, int NoBackup);
+                               int NoReboot, int NoBackup, size_t ExpectedSize);
 void HotSendPutUint32Little(unsigned char *Out, uint32_t Value);
 int HotSendSendAbortFrame(HotSendTransport *Transport);
 int HotSendWaitVerdict(HotSendTransport *Transport, double TimeoutSeconds,

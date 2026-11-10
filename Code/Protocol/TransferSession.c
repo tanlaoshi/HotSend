@@ -87,7 +87,7 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
     HotSendSessionLog(Request, Note);
 
     if (HotSendBuildTriggerCommand(Trigger, sizeof(Trigger), Target, Request->NoReboot,
-                                   Request->NoBackup) != 0) {
+                                   Request->NoBackup, FileLength) != 0) {
         ExitCode = HotSendExitLocal;
         goto Done;
     }
