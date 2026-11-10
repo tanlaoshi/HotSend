@@ -86,10 +86,21 @@ int HotSendTransferSession(const HotSendTransferRequest *Request,
              (unsigned)LocalCount, (unsigned)WholeCrc);
     HotSendSessionLog(Request, Note);
 
-    if (HotSendBuildTriggerCommand(Trigger, sizeof(Trigger), Target, Request->NoReboot,
-                                   Request->NoBackup, FileLength) != 0) {
-        ExitCode = HotSendExitLocal;
-        goto Done;
+    {
+        size_t ExpectedSize = Request->NoPreallocate ? 0u : FileLength;
+
+        if (Request->NoPreallocate) {
+            HotSendSessionLog(Request, "prealloc: off (--no-prealloc)");
+        } else {
+            snprintf(Note, sizeof(Note), "prealloc: size=%zu", FileLength);
+            HotSendSessionLog(Request, Note);
+        }
+        if (HotSendBuildTriggerCommand(Trigger, sizeof(Trigger), Target,
+                                       Request->NoReboot, Request->NoBackup,
+                                       ExpectedSize) != 0) {
+            ExitCode = HotSendExitLocal;
+            goto Done;
+        }
     }
     if (SerialCommandPath) {
         /* 用 --ready-timeout：冷起到 Blocks> 常 >15s（Pi） */

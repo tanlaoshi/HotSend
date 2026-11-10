@@ -30,6 +30,7 @@ typedef struct HotSendGuiWidgets {
     GtkDropDown *BoardPathDropDown;
     GtkCheckButton *NoRebootCheck;
     GtkCheckButton *NoBackupCheck;
+    GtkCheckButton *NoPreallocateCheck;
     GtkCheckButton *DryRunCheck;
     GtkCheckButton *SteadyThrottleCheck;
     GtkButton *StartButton;

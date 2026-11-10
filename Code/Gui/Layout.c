@@ -152,11 +152,14 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     gtk_check_button_set_active(Widgets->NoRebootCheck, TRUE);
     Widgets->NoBackupCheck =
         GTK_CHECK_BUTTON(gtk_check_button_new_with_label("Skip backup"));
+    Widgets->NoPreallocateCheck =
+        GTK_CHECK_BUTTON(gtk_check_button_new_with_label("No prealloc"));
     Widgets->DryRunCheck = GTK_CHECK_BUTTON(gtk_check_button_new_with_label("Dry run"));
     Widgets->SteadyThrottleCheck =
         GTK_CHECK_BUTTON(gtk_check_button_new_with_label("Steady throttle"));
     gtk_box_append(GTK_BOX(OptionsRow), GTK_WIDGET(Widgets->NoRebootCheck));
     gtk_box_append(GTK_BOX(OptionsRow), GTK_WIDGET(Widgets->NoBackupCheck));
+    gtk_box_append(GTK_BOX(OptionsRow), GTK_WIDGET(Widgets->NoPreallocateCheck));
     gtk_box_append(GTK_BOX(OptionsRow), GTK_WIDGET(Widgets->DryRunCheck));
     gtk_box_append(GTK_BOX(OptionsRow), GTK_WIDGET(Widgets->SteadyThrottleCheck));
     gtk_box_append(GTK_BOX(Outer), OptionsRow);

@@ -165,6 +165,9 @@ static int HotSendConfigApplyLine(HotSendConfig *Config, char *Line) {
     if (strcmp(Key, "no-backup") == 0) {
         return HotSendConfigParseBool(Value, &Config->NoBackup) == 0 ? 0 : -1;
     }
+    if (strcmp(Key, "no-prealloc") == 0) {
+        return HotSendConfigParseBool(Value, &Config->NoPreallocate) == 0 ? 0 : -1;
+    }
     if (strcmp(Key, "dry-run") == 0) {
         return HotSendConfigParseBool(Value, &Config->DryRun) == 0 ? 0 : -1;
     }
@@ -276,6 +279,7 @@ void HotSendConfigApplyToRequest(const HotSendConfig *Config,
     }
     Request->NoReboot = Config->NoReboot;
     Request->NoBackup = Config->NoBackup;
+    Request->NoPreallocate = Config->NoPreallocate;
     Request->DryRun = Config->DryRun;
     Request->InfoOnly = Config->InfoOnly;
     Request->SteadyThrottle = Config->SteadyThrottle;

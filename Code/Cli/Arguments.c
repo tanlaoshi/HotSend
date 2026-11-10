@@ -29,6 +29,7 @@ void HotSendCliPrintUsage(const char *ProgramName) {
             "  --steady-throttle   if pace-ms=0, same as --pace-ms 500 (Wi-Fi)\n"
             "  --no-reboot         leave board shell after OK\n"
             "  --no-backup         skip board .bak\n"
+            "  --no-prealloc       omit size= (board skips FAT preallocate)\n"
             "  --ready-timeout <s> --ack-timeout <s>\n"
             "  --data-timeout <s>  --verify-timeout <s>\n"
             "  --help\n"
@@ -166,6 +167,8 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
             Arguments->Request.NoReboot = 1;
         } else if (strcmp(Token, "--no-backup") == 0) {
             Arguments->Request.NoBackup = 1;
+        } else if (strcmp(Token, "--no-prealloc") == 0) {
+            Arguments->Request.NoPreallocate = 1;
         } else if (strcmp(Token, "--ready-timeout") == 0) {
             if (HotSendCliTakeDouble(&Index, ArgumentCount, ArgumentVector,
                                      &Arguments->Request.ReadyTimeoutSeconds) != 0) {
@@ -205,6 +208,7 @@ int HotSendCliArgumentsParse(HotSendCliArguments *Arguments, int ArgumentCount,
         /* 配置里常带 no-reboot；info 不用这些开关 */
         Arguments->Request.NoReboot = 0;
         Arguments->Request.NoBackup = 0;
+        Arguments->Request.NoPreallocate = 0;
     }
     if (!Arguments->Request.InfoOnly && Arguments->Request.LocalFilePath == NULL) {
         Arguments->ParseError = 1;

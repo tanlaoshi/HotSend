@@ -21,6 +21,7 @@ typedef struct HotSendConfig {
     int TcpPort;
     int NoReboot;
     int NoBackup;
+    int NoPreallocate;
     int DryRun;
     int InfoOnly;
     int PaceMilliseconds;

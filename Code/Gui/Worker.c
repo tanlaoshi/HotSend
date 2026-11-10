@@ -38,6 +38,7 @@ typedef struct HotSendGuiWorkerJob {
     int UseSerial;
     int NoReboot;
     int NoBackup;
+    int NoPreallocate;
     int DryRun;
     int SteadyThrottle;
 } HotSendGuiWorkerJob;
@@ -125,6 +126,7 @@ static gpointer HotSendGuiWorkerThreadMain(gpointer UserData) {
     Request.BoardTargetPath = Job->BoardPath;
     Request.NoReboot = Job->NoReboot;
     Request.NoBackup = Job->NoBackup;
+    Request.NoPreallocate = Job->NoPreallocate;
     Request.DryRun = Job->DryRun;
     Request.SteadyThrottle = Job->SteadyThrottle;
     Request.AckTimeoutSeconds = 120.0;
@@ -220,6 +222,8 @@ void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
     }
     Job->NoReboot = gtk_check_button_get_active(Widgets->NoRebootCheck) ? 1 : 0;
     Job->NoBackup = gtk_check_button_get_active(Widgets->NoBackupCheck) ? 1 : 0;
+    Job->NoPreallocate =
+        gtk_check_button_get_active(Widgets->NoPreallocateCheck) ? 1 : 0;
     Job->DryRun = gtk_check_button_get_active(Widgets->DryRunCheck) ? 1 : 0;
     Job->SteadyThrottle =
         gtk_check_button_get_active(Widgets->SteadyThrottleCheck) ? 1 : 0;

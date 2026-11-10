@@ -23,6 +23,7 @@ typedef struct HotSendTransferRequest {
     const char *BoardTargetPath; /* NULL → BLOCKS:Kernel.elf */
     int NoReboot;
     int NoBackup;
+    int NoPreallocate; /* 1：触发行不带 size=（板不预扩链；对比 prepare/flush） */
     int InfoOnly; /* 发 ksend info；与 DryRun 互斥 */
     int DryRun; /* 握手+差量表后 abort，不写盘 */
     int PaceMilliseconds; /* >0：每块 ACK 后睡 N ms，且每 16 块再加长歇（对表 ksend.py） */

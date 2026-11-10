@@ -21,6 +21,7 @@ typedef struct HotSendGuiLocalePack {
     const char *BoardPath;
     const char *NoReboot;
     const char *NoBackup;
+    const char *NoPreallocate;
     const char *DryRun;
     const char *SteadyThrottle;
     const char *Start;
@@ -45,6 +46,7 @@ static const HotSendGuiLocalePack HotSendGuiLocaleEnglish = {
     "Board path",
     "No reboot",
     "Skip backup",
+    "No prealloc (omit size=)",
     "Preview only (no write)",
     "Steady throttle (=pace 500)",
     "Start",
@@ -69,6 +71,7 @@ static const HotSendGuiLocalePack HotSendGuiLocaleChinese = {
     "板端路径",
     "不重启",
     "跳过备份",
+    "不预扩(不带 size=)",
     "仅预览差量(不写盘)",
     "稳妥节流(=pace 500)",
     "开始",
@@ -126,6 +129,7 @@ void HotSendGuiApplyLocale(HotSendGuiWidgets *Widgets, int Language) {
     }
     gtk_check_button_set_label(Widgets->NoRebootCheck, Pack->NoReboot);
     gtk_check_button_set_label(Widgets->NoBackupCheck, Pack->NoBackup);
+    gtk_check_button_set_label(Widgets->NoPreallocateCheck, Pack->NoPreallocate);
     gtk_check_button_set_label(Widgets->DryRunCheck, Pack->DryRun);
     gtk_check_button_set_label(Widgets->SteadyThrottleCheck, Pack->SteadyThrottle);
     gtk_button_set_label(Widgets->StartButton, Pack->Start);

@@ -86,6 +86,8 @@ void HotSendGuiApplyConfig(HotSendGuiWidgets *Widgets) {
     }
     gtk_check_button_set_active(Widgets->NoRebootCheck, Config.NoReboot ? TRUE : FALSE);
     gtk_check_button_set_active(Widgets->NoBackupCheck, Config.NoBackup ? TRUE : FALSE);
+    gtk_check_button_set_active(Widgets->NoPreallocateCheck,
+                                Config.NoPreallocate ? TRUE : FALSE);
     gtk_check_button_set_active(Widgets->DryRunCheck, Config.DryRun ? TRUE : FALSE);
     gtk_check_button_set_active(Widgets->SteadyThrottleCheck,
                                 Config.SteadyThrottle ? TRUE : FALSE);
