@@ -14,6 +14,7 @@
 typedef struct HotSendGuiIdleLog {
     HotSendGuiWidgets *Widgets;
     char *Message;
+    int Refresh;
 } HotSendGuiIdleLog;
 
 typedef struct HotSendGuiIdleProgress {
@@ -44,7 +45,11 @@ typedef struct HotSendGuiWorkerJob {
 static gboolean HotSendGuiIdleAppendLog(gpointer UserData) {
     HotSendGuiIdleLog *Item = (HotSendGuiIdleLog *)UserData;
 
-    HotSendGuiAppendLog(Item->Widgets, Item->Message);
+    if (Item->Refresh) {
+        HotSendGuiRefreshLog(Item->Widgets, Item->Message);
+    } else {
+        HotSendGuiAppendLog(Item->Widgets, Item->Message);
+    }
     g_free(Item->Message);
     g_free(Item);
     return G_SOURCE_REMOVE;
@@ -92,6 +97,7 @@ static void HotSendGuiWorkerLog(const char *Message, void *UserData) {
     Item = g_new0(HotSendGuiIdleLog, 1);
     Item->Widgets = Widgets;
     Item->Message = g_strdup(Message != NULL ? Message : "");
+    Item->Refresh = HotSendLogLineIsProgress(Item->Message);
     g_idle_add(HotSendGuiIdleAppendLog, Item);
 }
 
@@ -192,9 +198,11 @@ void HotSendGuiWorkerStart(HotSendGuiWidgets *Widgets) {
 
     Widgets->CancelRequested = 0;
     Widgets->TransferRunning = 1;
+    HotSendGuiClearLog(Widgets);
     gtk_widget_set_sensitive(GTK_WIDGET(Widgets->StartButton), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(Widgets->AbortButton), TRUE);
     gtk_progress_bar_set_fraction(Widgets->ProgressBar, 0.0);
+    gtk_progress_bar_set_text(Widgets->ProgressBar, "");
     gtk_label_set_text(Widgets->StatusLabel, "Starting…");
 
     Job = g_new0(HotSendGuiWorkerJob, 1);

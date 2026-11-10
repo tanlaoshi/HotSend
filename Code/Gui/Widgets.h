@@ -39,6 +39,7 @@ typedef struct HotSendGuiWidgets {
     GtkFrame *LogFrame;
     GtkTextBuffer *LogBuffer;
     GtkTextView *LogView;
+    GtkTextMark *LogProgressMark; /* 进度/等待同行刷新；Append 时清掉 */
     const char *BrowseDialogTitle;
     int Language;
     GThread *WorkerThread;
@@ -48,5 +49,9 @@ typedef struct HotSendGuiWidgets {
 
 GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets);
 void HotSendGuiAppendLog(HotSendGuiWidgets *Widgets, const char *Line);
+/* 覆盖上一条进度行（无则新开一行）；用于 sent / waiting … */
+void HotSendGuiRefreshLog(HotSendGuiWidgets *Widgets, const char *Line);
+void HotSendGuiClearLog(HotSendGuiWidgets *Widgets);
+int HotSendLogLineIsProgress(const char *Line);
 
 #endif

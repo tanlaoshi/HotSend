@@ -178,16 +178,24 @@ GtkWidget *HotSendGuiBuildWindow(HotSendGuiWidgets *Widgets) {
     gtk_box_append(GTK_BOX(Outer), GTK_WIDGET(Widgets->ProgressBar));
     Widgets->StatusLabel = GTK_LABEL(gtk_label_new("Idle"));
     gtk_widget_set_halign(GTK_WIDGET(Widgets->StatusLabel), GTK_ALIGN_START);
+    gtk_label_set_wrap(Widgets->StatusLabel, TRUE);
+    gtk_label_set_wrap_mode(Widgets->StatusLabel, PANGO_WRAP_WORD_CHAR);
+    gtk_widget_set_hexpand(GTK_WIDGET(Widgets->StatusLabel), TRUE);
     gtk_box_append(GTK_BOX(Outer), GTK_WIDGET(Widgets->StatusLabel));
 
     Widgets->LogFrame = GTK_FRAME(gtk_frame_new("Log"));
     LogScroll = gtk_scrolled_window_new();
     gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(LogScroll), 160);
+    /* 长行换行，不要横向滚动条 */
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(LogScroll), GTK_POLICY_NEVER,
+                                   GTK_POLICY_AUTOMATIC);
     gtk_widget_set_vexpand(LogScroll, TRUE);
     Widgets->LogView = GTK_TEXT_VIEW(gtk_text_view_new());
     gtk_text_view_set_editable(Widgets->LogView, FALSE);
     gtk_text_view_set_monospace(Widgets->LogView, TRUE);
+    gtk_text_view_set_wrap_mode(Widgets->LogView, GTK_WRAP_WORD_CHAR);
     Widgets->LogBuffer = gtk_text_view_get_buffer(Widgets->LogView);
+    Widgets->LogProgressMark = NULL;
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(LogScroll),
                                   GTK_WIDGET(Widgets->LogView));
     gtk_frame_set_child(Widgets->LogFrame, LogScroll);
